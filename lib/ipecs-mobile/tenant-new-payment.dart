@@ -1,7 +1,11 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:intl/intl.dart';
 
 class NewPayment extends StatefulWidget {
   const NewPayment({super.key});
@@ -17,6 +21,38 @@ class _NewPaymentState extends State<NewPayment> {
 
   List<String> roomNumbers = ["Room-1", "Room-2", "Room-3", "Room-4"];
   String selectedRoomNumber = "Room-1"; // Initial selection
+  XFile? imagePath; // Store the path to the uploaded image
+  final DatabaseReference _database = FirebaseDatabase.instance.reference();
+
+  TextEditingController referenceController = TextEditingController(); // Add a TextEditingController for the reference input
+  TextEditingController paidByController = TextEditingController();
+  TextEditingController amountController = TextEditingController();
+
+  // Method to submit payment data
+  void submitPayment() {
+    if (imagePath != null) {
+      final String referenceNumber = referenceController.text; // Get the reference input from the user
+      final String currentDate = DateFormat('MM-dd-yyyy').format(DateTime.now());
+      final String userName = paidByController.text; // Change to use the user's input name
+
+
+      final Map<String, dynamic> paymentData = {
+        'Date': currentDate,
+        'PaidBy': userName,
+        'PaymentAmount': amountController.text, // Replace with the actual payment amount
+        'ProofImage': imagePath!.path,
+        'RoomNum': selectedRoomNumber,
+      };
+
+      _database.child('NewPayment').child(referenceNumber).set(paymentData).then((_) {
+        // Data saved successfully
+        print('Payment data saved to Firebase: $paymentData');
+      }).catchError((error) {
+        // Handle any errors that occur during the process
+        print('Error saving payment data: $error');
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +62,7 @@ class _NewPaymentState extends State<NewPayment> {
       endDrawer: const Drawer(
         child: TenantDrawer(), // Call your custom drawer widget here
       ),
-      body: SingleChildScrollView( // Wrap your content with a SingleChildScrollView
+      body: SingleChildScrollView(
         child: SizedBox(
           width: double.infinity,
           child: Container(
@@ -73,7 +109,6 @@ class _NewPaymentState extends State<NewPayment> {
                         ),
                       ),
                       Container(
-                        // This is for the Drawer!
                         margin: EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
                         child: Builder(
                           builder: (context) => IconButton(
@@ -128,6 +163,7 @@ class _NewPaymentState extends State<NewPayment> {
                     color: const Color(0xfff7f8f9),
                   ),
                   child: TextField(
+                    controller: referenceController, // Use the referenceController to capture user input
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -156,6 +192,7 @@ class _NewPaymentState extends State<NewPayment> {
                     borderRadius: BorderRadius.circular(8 * sizeAxis),
                   ),
                   child: TextField(
+                    controller: paidByController,
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -164,6 +201,35 @@ class _NewPaymentState extends State<NewPayment> {
                       disabledBorder: InputBorder.none,
                       contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
                       hintText: 'Name',
+                      hintStyle: const TextStyle(color: Color(0xff8390a1)),
+                    ),
+                    style: GoogleFonts.urbanist(
+                      fontSize: 15 * size,
+                      fontWeight: FontWeight.w500,
+                      height: 1.25 * size / sizeAxis,
+                      color: const Color(0xff000000),
+                    ),
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 15 * sizeAxis),
+                  width: double.infinity,
+                  height: 56 * sizeAxis,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xffe8ecf4)),
+                    color: const Color(0xfff7f7f8),
+                    borderRadius: BorderRadius.circular(8 * sizeAxis),
+                  ),
+                  child: TextField(
+                    controller: amountController,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
+                      hintText: 'Amount',
                       hintStyle: const TextStyle(color: Color(0xff8390a1)),
                     ),
                     style: GoogleFonts.urbanist(
@@ -212,31 +278,38 @@ class _NewPaymentState extends State<NewPayment> {
                     color: const Color(0xfff7f7f8),
                     borderRadius: BorderRadius.circular(8 * sizeAxis),
                   ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
-                      hintText: 'Proof of Payment',
-                      hintStyle: const TextStyle(color: Color(0xff8390a1)),
+                  child: TextButton(
+                    onPressed: () async {
+                      final ImagePicker _picker = ImagePicker();
+                      final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+                      if (pickedImage != null) {
+                        setState(() {
+                          imagePath = pickedImage;
+                        });
+                      }
+                    },
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            imagePath == null ? 'Proof of Payment' : imagePath!.name, // Use the image name if it's not null
+                            style: GoogleFonts.urbanist(
+                              fontSize: 15 * size,
+                              fontWeight: FontWeight.w500,
+                              height: 1.25 * size / sizeAxis,
+                              color: imagePath == null ? const Color(0xff8390a1) : const Color(0xff000000),
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.upload, color: Color(0xff8390a1)),
+                      ],
                     ),
-                    style: GoogleFonts.urbanist(
-                      fontSize: 15 * size,
-                      fontWeight: FontWeight.w500,
-                      height: 1.25 * size / sizeAxis,
-                      color: const Color(0xff000000),
-                    ),
-                  ),
+                  )
                 ),
                 Container(
                   margin: EdgeInsets.fromLTRB(39 * sizeAxis, 0 * sizeAxis, 36 * sizeAxis, 0 * sizeAxis),
                   child: TextButton(
-                    onPressed: () {
-                      // Submit
-                    },
+                    onPressed: submitPayment, // Call the submitPayment function when the button is pressed
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                     ),
