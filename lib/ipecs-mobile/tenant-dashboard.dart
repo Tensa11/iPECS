@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
 import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
-import 'dart:ui';
 import 'package:iPECS/utils.dart';
 
 class TenantDashboard extends StatefulWidget {
@@ -16,12 +15,26 @@ class TenantDashboard extends StatefulWidget {
 
 class _TenantDashboardState extends State<TenantDashboard> {
   final user = FirebaseAuth.instance.currentUser!;
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("Rooms").child("Room-1");
+  String currentCredit = "Processing"; // Set an initial value while data is being fetched
 
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
     double fem = MediaQuery.of(context).size.width / baseWidth;
     double ffem = fem * 0.97;
+
+    _databaseReference.child("CurrentCredit").onValue.listen((event) {
+      print("Data from Firebase: ${event.snapshot.value}");
+      setState(() {
+        // Parse the value as a double and format it with 2 decimal places
+        double credit = double.parse(event.snapshot.value.toString());
+        currentCredit = credit.toStringAsFixed(2);
+      });
+    }, onError: (error) {
+      print("Error fetching data: $error");
+    });
+
 
     return Scaffold(
       endDrawer: const Drawer(
@@ -107,7 +120,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                 Container(
                   margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 0 * fem, 13 * fem),
                   child: Text(
-                    '₱ 100',
+                    '₱ $currentCredit', // Use the fetched currentCredit value here
                     style: SafeGoogleFont(
                       'Inter',
                       fontSize: 48 * ffem,
