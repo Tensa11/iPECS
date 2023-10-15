@@ -49,7 +49,7 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
                 ),
               ),
               currentAccountPicture: CircleAvatar(
-                backgroundImage: AssetImage('assets/ipecs-mobile/images/user1.png'),
+                backgroundImage: AssetImage('assets/ipecs-mobile/images/user2.png'),
               ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(

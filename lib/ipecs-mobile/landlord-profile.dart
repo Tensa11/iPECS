@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/landlord-login.dart';
 import 'package:iPECS/ipecs-mobile/tenant-login.dart';
+import 'package:iPECS/utils.dart';
 
 class LandlordProfile extends StatefulWidget {
   const LandlordProfile({Key? key}) : super(key: key);
@@ -29,6 +30,7 @@ class _LandlordProfileState extends State<LandlordProfile> {
         children: <Widget>[
           buildTop(),
           buildContent(),
+          // "Logout" button
           Container(
             margin: EdgeInsets.fromLTRB(38 * fem, 160 * fem, 38 * fem, 0 * fem),
             child: TextButton(

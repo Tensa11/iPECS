@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
-import 'dart:ui';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:iPECS/ipecs-mobile/get-started.dart';
 import 'package:iPECS/ipecs-mobile/landlord-login.dart';
 import 'package:iPECS/ipecs-mobile/tenant-dashboard.dart';
-import 'package:iPECS/ipecs-mobile/tenant-login.dart';
 import 'package:iPECS/utils.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class TenantLogin extends StatefulWidget {
   const TenantLogin({Key? key}) : super(key: key);
@@ -16,6 +14,11 @@ class TenantLogin extends StatefulWidget {
 }
 
 class _TenantLoginState extends State<TenantLogin> {
+  final TextEditingController _emailTextController = TextEditingController();
+  final TextEditingController _passwordTextController = TextEditingController();
+  bool _isObscure = true;
+  String _errorMessage = '';
+
   @override
   Widget build(BuildContext context) {
     double baseWidth = 400;
@@ -28,7 +31,8 @@ class _TenantLoginState extends State<TenantLogin> {
           child: SizedBox(
             width: double.infinity,
             child: Container(
-              padding: EdgeInsets.fromLTRB(22 * fem, 60 * fem, 21 * fem, 50 * fem),
+              padding: EdgeInsets.fromLTRB(
+                  22 * fem, 60 * fem, 21 * fem, 50 * fem),
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Color(0xffffffff),
@@ -37,7 +41,8 @@ class _TenantLoginState extends State<TenantLogin> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 291 * fem, 82 * fem),
+                    margin: EdgeInsets.fromLTRB(
+                        0 * fem, 0 * fem, 291 * fem, 82 * fem),
                     child: TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -49,7 +54,7 @@ class _TenantLoginState extends State<TenantLogin> {
                         width: 41 * fem,
                         height: 41 * fem,
                         child: Image.asset(
-                          'assets/ipecs-mobile/images/back-Bj7.png',
+                          'assets/ipecs-mobile/images/back.png',
                           width: 41 * fem,
                           height: 41 * fem,
                         ),
@@ -57,7 +62,8 @@ class _TenantLoginState extends State<TenantLogin> {
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(2 * fem, 0 * fem, 0 * fem, 30 * fem),
+                    margin: EdgeInsets.fromLTRB(
+                        2 * fem, 0 * fem, 0 * fem, 30 * fem),
                     child: Text(
                       'iPECS',
                       textAlign: TextAlign.center,
@@ -71,7 +77,8 @@ class _TenantLoginState extends State<TenantLogin> {
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 23 * fem, 32 * fem),
+                    margin: EdgeInsets.fromLTRB(
+                        0 * fem, 0 * fem, 23 * fem, 32 * fem),
                     constraints: BoxConstraints(
                       maxWidth: 307 * fem,
                     ),
@@ -96,6 +103,7 @@ class _TenantLoginState extends State<TenantLogin> {
                       color: const Color(0xfff7f8f9),
                     ),
                     child: TextField(
+                      controller: _emailTextController, // Assign the text controller
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -104,7 +112,7 @@ class _TenantLoginState extends State<TenantLogin> {
                         disabledBorder: InputBorder.none,
                         contentPadding:
                         EdgeInsets.fromLTRB(18 * fem, 18 * fem, 18 * fem, 19 * fem),
-                        hintText: 'Enter your email',
+                        hintText: 'Enter Email',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
                       ),
                       style: SafeGoogleFont(
@@ -114,6 +122,7 @@ class _TenantLoginState extends State<TenantLogin> {
                         height: 1.25 * ffem / fem,
                         color: const Color(0xff000000),
                       ),
+                      keyboardType: TextInputType.emailAddress,
                     ),
                   ),
                   Container(
@@ -125,6 +134,7 @@ class _TenantLoginState extends State<TenantLogin> {
                       color: const Color(0xfff7f8f9),
                     ),
                     child: TextField(
+                      controller: _passwordTextController, // Assign the text controller
                       decoration: InputDecoration(
                         border: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -135,6 +145,17 @@ class _TenantLoginState extends State<TenantLogin> {
                         EdgeInsets.fromLTRB(18 * fem, 18 * fem, 18 * fem, 19 * fem),
                         hintText: 'Enter your Password',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isObscure ? Icons.visibility : Icons.visibility_off,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isObscure = !_isObscure;
+                            });
+                          },
+                        ),
                       ),
                       style: SafeGoogleFont(
                         'Urbanist',
@@ -143,17 +164,34 @@ class _TenantLoginState extends State<TenantLogin> {
                         height: 1.25 * ffem / fem,
                         color: const Color(0xff000000),
                       ),
+                      keyboardType: TextInputType.text,
+                      obscureText: _isObscure, // Toggle password visibility
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(1 * fem, 0 * fem, 0 * fem, 150 * fem),
+                    margin: EdgeInsets.fromLTRB(
+                        1 * fem, 0 * fem, 0 * fem, 150 * fem),
                     child: TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const TenantDashboard(),
-                          ),
-                        );
+                      onPressed: () async {
+                        try {
+                          await FirebaseAuth.instance.signInWithEmailAndPassword(
+                            email: _emailTextController.text,
+                            password: _passwordTextController.text,
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const TenantDashboard(),
+                            ),
+                          );
+                        } catch (error) {
+                          print("Error: $error");
+                          // Handle the error here, you can show an error message to the user.
+                          setState(() {
+                            _errorMessage =
+                            "An error occurred. Please check your email and password.";
+                          });
+                        }
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
@@ -182,7 +220,8 @@ class _TenantLoginState extends State<TenantLogin> {
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(1 * fem, 0 * fem, 0 * fem, 0 * fem),
+                    margin: EdgeInsets.fromLTRB(
+                        1 * fem, 0 * fem, 0 * fem, 0 * fem),
                     child: TextButton(
                       onPressed: () {
                         Navigator.of(context).push(
@@ -233,6 +272,22 @@ class _TenantLoginState extends State<TenantLogin> {
                       ),
                     ),
                   ),
+                  if (_errorMessage.isNotEmpty)
+                    Container(
+                      margin: EdgeInsets.fromLTRB(
+                          1 * fem, 10 * fem, 0 * fem, 0 * fem),
+                      child: Text(
+                        _errorMessage,
+                        style: SafeGoogleFont(
+                          'Urbanist',
+                          fontSize: 15 * ffem,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4 * ffem / fem,
+                          letterSpacing: 0.15 * fem,
+                          color: const Color(0xffe74c3c),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

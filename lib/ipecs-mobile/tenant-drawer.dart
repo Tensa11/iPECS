@@ -72,24 +72,24 @@ class _TenantDrawerState extends State<TenantDrawer> {
                   ),
                 );              },
             ),
-            ListTile(
-              leading: const Icon(
-                Icons.payment,
-                color: Colors.white, // Set the icon color to white
-              ),
-              title: const Text(
-                'Payments',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const PaymentHistory(),
-                  ),
-                );              },
-            ),
+            // ListTile(
+            //   leading: const Icon(
+            //     Icons.payment,
+            //     color: Colors.white, // Set the icon color to white
+            //   ),
+            //   title: const Text(
+            //     'Payments',
+            //     style: TextStyle(
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            //   onTap: () {
+            //     Navigator.of(context).push(
+            //       MaterialPageRoute(
+            //         builder: (context) => const PaymentHistory(),
+            //       ),
+            //     );              },
+            // ),
             ListTile(
               leading: const Icon(
                 Icons.person,
