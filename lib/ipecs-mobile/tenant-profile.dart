@@ -14,13 +14,13 @@ class _TenantProfileState extends State<TenantProfile> {
   final double profileHeight = 144;
 
   double baseWidth = 375;
-  late double fem;
-  late double ffem;
+  late double sizeAxis;
+  late double size;
 
   @override
   Widget build(BuildContext context) {
-    fem = MediaQuery.of(context).size.width / baseWidth;
-    ffem = fem * 0.97;
+    sizeAxis = MediaQuery.of(context).size.width / baseWidth;
+    size = sizeAxis * 0.97;
 
     return Scaffold(
       body: ListView(
@@ -29,7 +29,7 @@ class _TenantProfileState extends State<TenantProfile> {
           buildTop(),
           buildContent(),
           Container(
-            margin: EdgeInsets.fromLTRB(38 * fem, 160 * fem, 38 * fem, 0 * fem),
+            margin: EdgeInsets.fromLTRB(38 * sizeAxis, 160 * sizeAxis, 38 * sizeAxis, 0 * sizeAxis),
             child: TextButton(
               onPressed: () {
                 Navigator.of(context).push(
@@ -43,15 +43,15 @@ class _TenantProfileState extends State<TenantProfile> {
               ),
               child: Container(
                 width: double.infinity,
-                height: 56 * fem,
+                height: 56 * sizeAxis,
                 decoration: BoxDecoration(
                   color: const Color(0xff231b53),
-                  borderRadius: BorderRadius.circular(30 * fem),
+                  borderRadius: BorderRadius.circular(30 * sizeAxis),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0x14000000),
-                      offset: Offset(0 * fem, 20 * fem),
-                      blurRadius: 30 * fem,
+                      offset: Offset(0 * sizeAxis, 20 * sizeAxis),
+                      blurRadius: 30 * sizeAxis,
                     ),
                   ],
                 ),
@@ -60,9 +60,9 @@ class _TenantProfileState extends State<TenantProfile> {
                     'Logout',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.urbanist(
-                      fontSize: 16 * ffem,
+                      fontSize: 16 * size,
                       fontWeight: FontWeight.w600,
-                      height: 1.5 * ffem / fem,
+                      height: 1.5 * size / sizeAxis,
                       color: const Color(0xffffffff),
                     ),
                   ),
@@ -162,10 +162,10 @@ class _TenantProfileState extends State<TenantProfile> {
         ),
       ),
       Positioned(
-        top: 12 * fem,
-        left: 12 * fem,
+        top: 12 * sizeAxis,
+        left: 12 * sizeAxis,
         child: Container(
-          margin: EdgeInsets.fromLTRB(10 * fem, 12 * fem, 200 * fem, 0 * fem),
+          margin: EdgeInsets.fromLTRB(10 * sizeAxis, 12 * sizeAxis, 200 * sizeAxis, 0 * sizeAxis),
           child: TextButton(
             onPressed: () {
               Navigator.of(context).pop();
@@ -174,12 +174,12 @@ class _TenantProfileState extends State<TenantProfile> {
               padding: EdgeInsets.zero,
             ),
             child: SizedBox(
-              width: 41 * fem,
-              height: 41 * fem,
+              width: 41 * sizeAxis,
+              height: 41 * sizeAxis,
               child: Image.asset(
                 'assets/ipecs-mobile/images/back.png',
-                width: 41 * fem,
-                height: 41 * fem,
+                width: 41 * sizeAxis,
+                height: 41 * sizeAxis,
               ),
             ),
           ),

@@ -10,13 +10,13 @@ class EditUser extends StatefulWidget {
 
 class _EditUserState extends State<EditUser> {
   double baseWidth = 375;
-  late double fem;
-  late double ffem;
+  late double sizeAxis;
+  late double size;
 
   @override
   Widget build(BuildContext context) {
-    fem = MediaQuery.of(context).size.width / baseWidth;
-    ffem = fem * 0.97;
+    sizeAxis = MediaQuery.of(context).size.width / baseWidth;
+    size = sizeAxis * 0.97;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false, // Remove debug banner
@@ -25,7 +25,7 @@ class _EditUserState extends State<EditUser> {
           child: SizedBox(
             width: double.infinity,
             child: Container(
-              padding: EdgeInsets.fromLTRB(22 * fem, 44 * fem, 21 * fem, 176 * fem),
+              padding: EdgeInsets.fromLTRB(22 * sizeAxis, 44 * sizeAxis, 21 * sizeAxis, 176 * sizeAxis),
               width: double.infinity,
               decoration: const BoxDecoration(
                 color: Color(0xffffffff),
@@ -34,13 +34,13 @@ class _EditUserState extends State<EditUser> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 3 * fem, 49 * fem),
+                    margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 3 * sizeAxis, 49 * sizeAxis),
                     width: double.infinity,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          margin: EdgeInsets.fromLTRB(0 * fem, 12 * fem, 200 * fem, 0 * fem),
+                          margin: EdgeInsets.fromLTRB(0 * sizeAxis, 12 * sizeAxis, 200 * sizeAxis, 0 * sizeAxis),
                           child: TextButton(
                             onPressed: () {
                               Navigator.of(context).pop();
@@ -49,12 +49,12 @@ class _EditUserState extends State<EditUser> {
                               padding: EdgeInsets.zero,
                             ),
                             child: SizedBox(
-                              width: 41 * fem,
-                              height: 41 * fem,
+                              width: 41 * sizeAxis,
+                              height: 41 * sizeAxis,
                               child: Image.asset(
                                 'assets/ipecs-mobile/images/back.png',
-                                width: 41 * fem,
-                                height: 41 * fem,
+                                width: 41 * sizeAxis,
+                                height: 41 * sizeAxis,
                               ),
                             ),
                           ),
@@ -63,23 +63,23 @@ class _EditUserState extends State<EditUser> {
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 173 * fem, 15 * fem),
+                    margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 173 * sizeAxis, 15 * sizeAxis),
                     child: Text(
                       'Edit User',
                       style: GoogleFonts.urbanist(
-                        fontSize: 30 * ffem,
+                        fontSize: 30 * size,
                         fontWeight: FontWeight.w700,
-                        height: 1.3 * ffem / fem,
-                        letterSpacing: -0.3 * fem,
+                        height: 1.3 * size / sizeAxis,
+                        letterSpacing: -0.3 * sizeAxis,
                         color: const Color(0xff1e232c),
                       ),
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(1 * fem, 0 * fem, 0 * fem, 15 * fem),
-                    width: 331 * fem,
+                    margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 15 * sizeAxis),
+                    width: 331 * sizeAxis,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8 * fem),
+                      borderRadius: BorderRadius.circular(8 * sizeAxis),
                       border: Border.all(color: const Color(0xffe8ecf4)),
                       color: const Color(0xfff7f8f9),
                     ),
@@ -90,23 +90,23 @@ class _EditUserState extends State<EditUser> {
                         enabledBorder: InputBorder.none,
                         errorBorder: InputBorder.none,
                         disabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.fromLTRB(18 * fem, 18 * fem, 18 * fem, 19 * fem),
+                        contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 18 * sizeAxis, 18 * sizeAxis, 19 * sizeAxis),
                         hintText: 'Name',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
                       ),
                       style: GoogleFonts.urbanist(
-                        fontSize: 15 * ffem,
+                        fontSize: 15 * size,
                         fontWeight: FontWeight.w500,
-                        height: 1.25 * ffem / fem,
+                        height: 1.25 * size / sizeAxis,
                         color: const Color(0xff000000),
                       ),
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 1 * fem, 19 * fem),
-                    width: 331 * fem,
+                    margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 1 * sizeAxis, 19 * sizeAxis),
+                    width: 331 * sizeAxis,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8 * fem),
+                      borderRadius: BorderRadius.circular(8 * sizeAxis),
                       border: Border.all(color: const Color(0xffe8ecf4)),
                       color: const Color(0xfff7f7f8),
                     ),
@@ -117,23 +117,23 @@ class _EditUserState extends State<EditUser> {
                         enabledBorder: InputBorder.none,
                         errorBorder: InputBorder.none,
                         disabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.fromLTRB(18 * fem, 18 * fem, 18 * fem, 19 * fem),
+                        contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 18 * sizeAxis, 18 * sizeAxis, 19 * sizeAxis),
                         hintText: 'Room Number',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
                       ),
                       style: GoogleFonts.urbanist(
-                        fontSize: 15 * ffem,
+                        fontSize: 15 * size,
                         fontWeight: FontWeight.w500,
-                        height: 1.25 * ffem / fem,
+                        height: 1.25 * size / sizeAxis,
                         color: const Color(0xff000000),
                       ),
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 1 * fem, 19 * fem),
-                    width: 331 * fem,
+                    margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 1 * sizeAxis, 19 * sizeAxis),
+                    width: 331 * sizeAxis,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8 * fem),
+                      borderRadius: BorderRadius.circular(8 * sizeAxis),
                       border: Border.all(color: const Color(0xffe8ecf4)),
                       color: const Color(0xfff7f7f8),
                     ),
@@ -144,23 +144,23 @@ class _EditUserState extends State<EditUser> {
                         enabledBorder: InputBorder.none,
                         errorBorder: InputBorder.none,
                         disabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.fromLTRB(18 * fem, 18 * fem, 18 * fem, 19 * fem),
+                        contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 18 * sizeAxis, 18 * sizeAxis, 19 * sizeAxis),
                         hintText: 'Email',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
                       ),
                       style: GoogleFonts.urbanist(
-                        fontSize: 15 * ffem,
+                        fontSize: 15 * size,
                         fontWeight: FontWeight.w500,
-                        height: 1.25 * ffem / fem,
+                        height: 1.25 * size / sizeAxis,
                         color: const Color(0xff000000),
                       ),
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(1 * fem, 0 * fem, 0 * fem, 19 * fem),
-                    width: 331 * fem,
+                    margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 19 * sizeAxis),
+                    width: 331 * sizeAxis,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8 * fem),
+                      borderRadius: BorderRadius.circular(8 * sizeAxis),
                       border: Border.all(color: const Color(0xffe8ecf4)),
                       color: const Color(0xfff7f7f8),
                     ),
@@ -171,24 +171,24 @@ class _EditUserState extends State<EditUser> {
                         enabledBorder: InputBorder.none,
                         errorBorder: InputBorder.none,
                         disabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.fromLTRB(18 * fem, 13 * fem, 18 * fem, 19 * fem),
+                        contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 13 * sizeAxis, 18 * sizeAxis, 19 * sizeAxis),
                         hintText: 'Phone Number',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
                       ),
                       style: GoogleFonts.urbanist(
-                        fontSize: 14 * ffem,
+                        fontSize: 14 * size,
                         fontWeight: FontWeight.w500,
-                        height: 1.7142857143 * ffem / fem,
-                        letterSpacing: -0.28 * fem,
+                        height: 1.7142857143 * size / sizeAxis,
+                        letterSpacing: -0.28 * sizeAxis,
                         color: const Color(0xff000000),
                       ),
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 1 * fem, 32 * fem),
-                    width: 331 * fem,
+                    margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 1 * sizeAxis, 32 * sizeAxis),
+                    width: 331 * sizeAxis,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8 * fem),
+                      borderRadius: BorderRadius.circular(8 * sizeAxis),
                       border: Border.all(color: const Color(0xffe8ecf4)),
                       color: const Color(0xfff7f7f8),
                     ),
@@ -200,21 +200,21 @@ class _EditUserState extends State<EditUser> {
                         enabledBorder: InputBorder.none,
                         errorBorder: InputBorder.none,
                         disabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.fromLTRB(18 * fem, 13 * fem, 18 * fem, 19 * fem),
+                        contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 13 * sizeAxis, 18 * sizeAxis, 19 * sizeAxis),
                         hintText: 'Password',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
                       ),
                       style: GoogleFonts.urbanist(
-                        fontSize: 14 * ffem,
+                        fontSize: 14 * size,
                         fontWeight: FontWeight.w500,
-                        height: 1.7142857143 * ffem / fem,
-                        letterSpacing: -0.28 * fem,
+                        height: 1.7142857143 * size / sizeAxis,
+                        letterSpacing: -0.28 * sizeAxis,
                         color: const Color(0xff000000),
                       ),
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.fromLTRB(37 * fem, 0 * fem, 38 * fem, 0 * fem),
+                    margin: EdgeInsets.fromLTRB(37 * sizeAxis, 0 * sizeAxis, 38 * sizeAxis, 0 * sizeAxis),
                     child: TextButton(
                       onPressed: () {},
                       style: TextButton.styleFrom(
@@ -222,15 +222,15 @@ class _EditUserState extends State<EditUser> {
                       ),
                       child: Container(
                         width: double.infinity,
-                        height: 56 * fem,
+                        height: 56 * sizeAxis,
                         decoration: BoxDecoration(
                           color: const Color(0xff231b53),
-                          borderRadius: BorderRadius.circular(30 * fem),
+                          borderRadius: BorderRadius.circular(30 * sizeAxis),
                           boxShadow: [
                             BoxShadow(
                               color: const Color(0x14000000),
-                              offset: Offset(0 * fem, 20 * fem),
-                              blurRadius: 30 * fem,
+                              offset: Offset(0 * sizeAxis, 20 * sizeAxis),
+                              blurRadius: 30 * sizeAxis,
                             ),
                           ],
                         ),
@@ -239,9 +239,9 @@ class _EditUserState extends State<EditUser> {
                             'Submit',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.urbanist(
-                              fontSize: 16 * ffem,
+                              fontSize: 16 * size,
                               fontWeight: FontWeight.w600,
-                              height: 1.5 * ffem / fem,
+                              height: 1.5 * size / sizeAxis,
                               color: const Color(0xffffffff),
                             ),
                           ),

@@ -90,24 +90,24 @@ class _TenantDrawerState extends State<TenantDrawer> {
             //       ),
             //     );              },
             // ),
-            ListTile(
-              leading: const Icon(
-                Icons.person,
-                color: Colors.white, // Set the icon color to white
-              ),
-              title: const Text(
-                'Profile',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const TenantProfile(),
-                  ),
-                );              },
-            ),
+            // ListTile(
+            //   leading: const Icon(
+            //     Icons.person,
+            //     color: Colors.white, // Set the icon color to white
+            //   ),
+            //   title: const Text(
+            //     'Profile',
+            //     style: TextStyle(
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            //   onTap: () {
+            //     Navigator.of(context).push(
+            //       MaterialPageRoute(
+            //         builder: (context) => const TenantProfile(),
+            //       ),
+            //     );              },
+            // ),
             const Divider(),
             ListTile(
               leading: const Icon(

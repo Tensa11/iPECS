@@ -21,8 +21,8 @@ class _TenantDashboardState extends State<TenantDashboard> {
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
-    double fem = MediaQuery.of(context).size.width / baseWidth;
-    double ffem = fem * 0.97;
+    double sizeAxis = MediaQuery.of(context).size.width / baseWidth;
+    double size = sizeAxis * 0.97;
 
     _databaseReference.child("CurrentCredit").onValue.listen((event) {
       print("Data from Firebase: ${event.snapshot.value}");
@@ -44,7 +44,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
         child: SizedBox(
           width: double.infinity,
           child: Container(
-            padding: EdgeInsets.fromLTRB(24 * fem, 30 * fem, 24 * fem, 0 * fem),
+            padding: EdgeInsets.fromLTRB(24 * sizeAxis, 30 * sizeAxis, 24 * sizeAxis, 0 * sizeAxis),
             width: double.infinity,
             decoration: const BoxDecoration(
               color: Color(0xffffffff),
@@ -53,13 +53,13 @@ class _TenantDashboardState extends State<TenantDashboard> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  margin: EdgeInsets.fromLTRB(8 * fem, 0 * fem, 0 * fem, 32 * fem),
+                  margin: EdgeInsets.fromLTRB(8 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 32 * sizeAxis),
                   width: double.infinity,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 200 * fem, 0 * fem),
+                        margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 200 * sizeAxis, 0 * sizeAxis),
                         child: TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
@@ -72,10 +72,10 @@ class _TenantDashboardState extends State<TenantDashboard> {
                             padding: EdgeInsets.zero,
                           ),
                           child: Container(
-                            width: 48 * fem,
-                            height: 48 * fem,
+                            width: 48 * sizeAxis,
+                            height: 48 * sizeAxis,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24 * fem),
+                              borderRadius: BorderRadius.circular(24 * sizeAxis),
                               image: const DecorationImage(
                                 fit: BoxFit.cover,
                                 image: AssetImage('assets/ipecs-mobile/images/user1.png'),
@@ -85,13 +85,13 @@ class _TenantDashboardState extends State<TenantDashboard> {
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.fromLTRB(10 * fem, 20 * fem, 0 * fem, 0 * fem),
+                        margin: EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
                         child: Builder(
                           builder: (context) => IconButton(
                             icon: Image.asset(
                               'assets/ipecs-mobile/images/drawer.png',
-                              width: 25 * fem,
-                              height: 18 * fem,
+                              width: 25 * sizeAxis,
+                              height: 18 * sizeAxis,
                             ),
                             onPressed: () {
                               Scaffold.of(context).openEndDrawer();
@@ -103,29 +103,29 @@ class _TenantDashboardState extends State<TenantDashboard> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 0 * fem, 0 * fem),
+                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
                   child: Text(
                     'Current Credit',
                     textAlign: TextAlign.center,
                     style: SafeGoogleFont(
                       'Urbanist',
-                      fontSize: 14 * ffem,
+                      fontSize: 14 * size,
                       fontWeight: FontWeight.w700,
-                      height: 1.4285714286 * ffem / fem,
+                      height: 1.4285714286 * size / sizeAxis,
                       color: const Color(0xff23426f),
                       decoration: TextDecoration.none,
                     ),
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 0 * fem, 13 * fem),
+                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 13 * sizeAxis),
                   child: Text(
                     '₱ $currentCredit', // Use the fetched currentCredit value here
                     style: SafeGoogleFont(
                       'Inter',
-                      fontSize: 48 * ffem,
+                      fontSize: 48 * size,
                       fontWeight: FontWeight.w400,
-                      height: 1.2 * ffem / fem,
+                      height: 1.2 * size / sizeAxis,
                       color: const Color(0xff1f375b),
                       decoration: TextDecoration.none,
                     ),
@@ -133,7 +133,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                 ),
                 // Recent Payments ListView
                 Container(
-                  margin: EdgeInsets.fromLTRB(0 * fem, 20 * fem, 0 * fem, 13 * fem),
+                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 13 * sizeAxis),
                   width: double.infinity,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,9 +142,9 @@ class _TenantDashboardState extends State<TenantDashboard> {
                         'Recent Payment',
                         style: SafeGoogleFont(
                           'Urbanist',
-                          fontSize: 18 * ffem,
+                          fontSize: 18 * size,
                           fontWeight: FontWeight.w500,
-                          height: 1.2 * ffem / fem,
+                          height: 1.2 * size / sizeAxis,
                           color: const Color(0xff5c5473),
                           decoration: TextDecoration.none,
                         ),
@@ -202,7 +202,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(32 * fem, 200 * fem, 38 * fem, 0 * fem),
+                  margin: EdgeInsets.fromLTRB(32 * sizeAxis, 200 * sizeAxis, 38 * sizeAxis, 0 * sizeAxis),
                   child: TextButton(
                     onPressed: () {
                       Navigator.of(context).push(
@@ -216,15 +216,15 @@ class _TenantDashboardState extends State<TenantDashboard> {
                     ),
                     child: Container(
                       width: double.infinity,
-                      height: 56 * fem,
+                      height: 56 * sizeAxis,
                       decoration: BoxDecoration(
                         color: const Color(0xff231b53),
-                        borderRadius: BorderRadius.circular(30 * fem),
+                        borderRadius: BorderRadius.circular(30 * sizeAxis),
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0x14000000),
-                            offset: Offset(0 * fem, 20 * fem),
-                            blurRadius: 30 * fem,
+                            offset: Offset(0 * sizeAxis, 20 * sizeAxis),
+                            blurRadius: 30 * sizeAxis,
                           ),
                         ],
                       ),
@@ -235,9 +235,9 @@ class _TenantDashboardState extends State<TenantDashboard> {
                             textAlign: TextAlign.center,
                             style: SafeGoogleFont(
                               'Urbanist',
-                              fontSize: 16 * ffem,
+                              fontSize: 16 * size,
                               fontWeight: FontWeight.w600,
-                              height: 1.5 * ffem / fem,
+                              height: 1.5 * size / sizeAxis,
                               color: const Color(0xffffffff),
                             ),
                           ),

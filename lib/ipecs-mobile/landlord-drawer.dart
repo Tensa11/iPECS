@@ -5,10 +5,6 @@ import 'package:iPECS/ipecs-mobile/landlord-manage-user.dart';
 import 'package:iPECS/ipecs-mobile/landlord-payment-management.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/ipecs-mobile/landlord-records.dart';
-import 'package:iPECS/ipecs-mobile/tenant-dashboard.dart';
-import 'package:iPECS/ipecs-mobile/tenant-login.dart';
-import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
-import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 
 class LandlordDrawer extends StatefulWidget {
   const LandlordDrawer({Key? key}) : super(key: key);
@@ -132,25 +128,25 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
                   ),
                 );              },
             ),
-            ListTile(
-              leading: const Icon(
-                Icons.person,
-                color: Colors.white, // Set the icon color to white
-              ),
-              title: const Text(
-                'Profile',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const LandlordProfile(),
-                  ),
-                );
-              },
-            ),
+            // ListTile(
+            //   leading: const Icon(
+            //     Icons.person,
+            //     color: Colors.white, // Set the icon color to white
+            //   ),
+            //   title: const Text(
+            //     'Profile',
+            //     style: TextStyle(
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            //   onTap: () {
+            //     Navigator.of(context).push(
+            //       MaterialPageRoute(
+            //         builder: (context) => const LandlordProfile(),
+            //       ),
+            //     );
+            //   },
+            // ),
             const Divider(),
             ListTile(
               leading: const Icon(

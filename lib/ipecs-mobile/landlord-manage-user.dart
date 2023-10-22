@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:iPECS/ipecs-mobile/landlord-add-user.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
@@ -19,8 +20,8 @@ class _ManageUserState extends State<ManageUser> {
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
-    double fem = MediaQuery.of(context).size.width / baseWidth;
-    double ffem = fem * 0.97;
+    double sizeAxis = MediaQuery.of(context).size.width / baseWidth;
+    double size = sizeAxis * 0.97;
 
     return Scaffold(
       endDrawer: const Drawer(
@@ -30,7 +31,7 @@ class _ManageUserState extends State<ManageUser> {
         child: SizedBox(
           width: double.infinity,
           child: Container(
-            padding: EdgeInsets.fromLTRB(24 * fem, 30 * fem, 24 * fem, 0 * fem),
+            padding: EdgeInsets.fromLTRB(24 * sizeAxis, 30 * sizeAxis, 24 * sizeAxis, 0 * sizeAxis),
             width: double.infinity,
             decoration: const BoxDecoration(
               color: Color(0xffffffff),
@@ -39,13 +40,13 @@ class _ManageUserState extends State<ManageUser> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  margin: EdgeInsets.fromLTRB(8 * fem, 0 * fem, 0 * fem, 32 * fem),
+                  margin: EdgeInsets.fromLTRB(8 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 32 * sizeAxis),
                   width: double.infinity,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
-                        margin: EdgeInsets.fromLTRB(0 * fem, 0 * fem, 200 * fem, 0 * fem),
+                        margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 200 * sizeAxis, 0 * sizeAxis),
                         child: TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
@@ -58,10 +59,10 @@ class _ManageUserState extends State<ManageUser> {
                             padding: EdgeInsets.zero,
                           ),
                           child: Container(
-                            width: 48 * fem,
-                            height: 48 * fem,
+                            width: 48 * sizeAxis,
+                            height: 48 * sizeAxis,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24 * fem),
+                              borderRadius: BorderRadius.circular(24 * sizeAxis),
                               image: const DecorationImage(
                                 fit: BoxFit.cover,
                                 image: AssetImage('assets/ipecs-mobile/images/user2.png'),
@@ -71,13 +72,13 @@ class _ManageUserState extends State<ManageUser> {
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.fromLTRB(10 * fem, 20 * fem, 0 * fem, 0 * fem),
+                        margin: EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
                         child: Builder(
                           builder: (context) => IconButton(
                             icon: Image.asset(
                               'assets/ipecs-mobile/images/drawer.png',
-                              width: 25 * fem,
-                              height: 18 * fem,
+                              width: 25 * sizeAxis,
+                              height: 18 * sizeAxis,
                             ),
                             onPressed: () {
                               Scaffold.of(context).openEndDrawer();
@@ -90,7 +91,7 @@ class _ManageUserState extends State<ManageUser> {
                 ),
                 // Recent Payments ListView
                 Container(
-                  margin: EdgeInsets.fromLTRB(0 * fem, 20 * fem, 0 * fem, 13 * fem),
+                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 13 * sizeAxis),
                   width: double.infinity,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,9 +100,9 @@ class _ManageUserState extends State<ManageUser> {
                         'User Management',
                         style: SafeGoogleFont(
                           'Urbanist',
-                          fontSize: 18 * ffem,
+                          fontSize: 18 * size,
                           fontWeight: FontWeight.w500,
-                          height: 1.2 * ffem / fem,
+                          height: 1.2 * size / sizeAxis,
                           color: const Color(0xff5c5473),
                           decoration: TextDecoration.none,
                         ),
@@ -178,12 +179,10 @@ class _ManageUserState extends State<ManageUser> {
                                   IconButton(
                                     icon: Icon(Icons.close, color: Colors.red),
                                     onPressed: null, // Set to null
-
                                   ),
                                   IconButton(
                                     icon: Icon(Icons.edit, color: Colors.red),
                                     onPressed: null, // Set to null
-
                                   ),
                                 ],
                               ),
@@ -261,7 +260,6 @@ class _ManageUserState extends State<ManageUser> {
                                   IconButton(
                                     icon: Icon(Icons.edit, color: Colors.red),
                                     onPressed: null, // Set to null
-
                                   ),
                                 ],
                               ),
@@ -278,6 +276,22 @@ class _ManageUserState extends State<ManageUser> {
           ),
         ),
       ),
+      // Add a FloatingActionButton
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const AddUser(),
+            ),
+          );
+        },
+        backgroundColor: const Color(0xff1f375b), // Set the background color
+        child: const Icon(
+          Icons.person,
+          color: Color(0xffdfb153), // Set the desired color
+        ),
+      ),
+
     );
   }
 }
