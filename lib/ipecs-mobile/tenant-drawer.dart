@@ -4,6 +4,7 @@ import 'package:iPECS/ipecs-mobile/tenant-login.dart';
 import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
 import 'package:iPECS/ipecs-mobile/tenant-payments-history.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
+import 'package:iPECS/ipecs-mobile/tenant-rooms.dart';
 
 class TenantDrawer extends StatefulWidget {
   const TenantDrawer({Key? key}) : super(key: key);
@@ -72,42 +73,60 @@ class _TenantDrawerState extends State<TenantDrawer> {
                   ),
                 );              },
             ),
-            // ListTile(
-            //   leading: const Icon(
-            //     Icons.payment,
-            //     color: Colors.white, // Set the icon color to white
-            //   ),
-            //   title: const Text(
-            //     'Payments',
-            //     style: TextStyle(
-            //       color: Colors.white,
-            //     ),
-            //   ),
-            //   onTap: () {
-            //     Navigator.of(context).push(
-            //       MaterialPageRoute(
-            //         builder: (context) => const PaymentHistory(),
-            //       ),
-            //     );              },
-            // ),
-            // ListTile(
-            //   leading: const Icon(
-            //     Icons.person,
-            //     color: Colors.white, // Set the icon color to white
-            //   ),
-            //   title: const Text(
-            //     'Profile',
-            //     style: TextStyle(
-            //       color: Colors.white,
-            //     ),
-            //   ),
-            //   onTap: () {
-            //     Navigator.of(context).push(
-            //       MaterialPageRoute(
-            //         builder: (context) => const TenantProfile(),
-            //       ),
-            //     );              },
-            // ),
+            ListTile(
+              leading: const Icon(
+                Icons.house,
+                color: Colors.white, // Set the icon color to white
+              ),
+              title: const Text(
+                'Rooms',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const TenantRooms(),
+                  ),
+                );              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.payment,
+                color: Colors.white, // Set the icon color to white
+              ),
+              title: const Text(
+                'Payment',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const NewPayment(),
+                  ),
+                );              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.payment,
+                color: Colors.white, // Set the icon color to white
+              ),
+              title: const Text(
+                'History',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const PaymentHistory(),
+                  ),
+                );              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(
@@ -127,6 +146,7 @@ class _TenantDrawerState extends State<TenantDrawer> {
                   ),
                 );              },
             ),
+
           ],
         ),
       ),

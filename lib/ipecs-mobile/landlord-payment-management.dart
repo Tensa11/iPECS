@@ -13,8 +13,87 @@ class PaymentManage extends StatefulWidget {
 }
 
 class _PaymentManageState extends State<PaymentManage> {
-  final user = FirebaseAuth.instance.currentUser!;
-  final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("NewPayment");
+  final DatabaseReference _newPaymentReference = FirebaseDatabase.instance.reference().child("NewPayment");
+  final DatabaseReference _paymentRecordReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
+  final auth = FirebaseAuth.instance;
+  User? currentUser;
+  List<Map<String, dynamic>> paymentData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getPayments();
+  }
+
+  Future<void> getPayments() async {
+    currentUser = auth.currentUser;
+    if (currentUser != null) {
+      print("USER ID: ${currentUser?.uid}");
+      _newPaymentReference.onValue.listen((event) {
+        final data = event.snapshot.value;
+        if (data is Map) {
+          paymentData = data.entries.map<Map<String, dynamic>>((entry) {
+            final payment = entry.value;
+            return {
+              'ref': entry.key,
+              'date': payment['Date'],
+              'paidBy': payment['PaidBy'],
+              'paymentAmount': payment['PaymentAmount'],
+              'proofImage': payment['ProofImage'],
+              'roomNum': payment['RoomNum'],
+            };
+          }).toList();
+          setState(() {});
+        } else {
+          print("Data is not in the expected format");
+        }
+      });
+    } else {
+      print("No User");
+    }
+  }
+
+  void handleCheckButtonPress(Map<String, dynamic> payment) {
+    // Use the same reference number from NewPayment
+    String refNumber = payment['ref'];
+
+    // Copy data from NewPayment to PaymentRecord and set PaymentStatus to true
+    _paymentRecordReference.child(refNumber).set({
+      'Date': payment['date'],
+      'PaidBy': payment['paidBy'],
+      'PaymentAmount': payment['paymentAmount'],
+      'ProofImage': payment['proofImage'],
+      'RoomNum': payment['roomNum'],
+      'PaymentStatus': true,
+    });
+
+    // Remove the payment record from NewPayment
+    _newPaymentReference.child(refNumber).remove();
+
+    // Refresh the payment data
+    getPayments();
+  }
+
+  void handleCloseButtonPress(Map<String, dynamic> payment) {
+    // Use the same reference number from NewPayment
+    String refNumber = payment['ref'];
+
+    // Copy data from NewPayment to PaymentRecord and set PaymentStatus to false
+    _paymentRecordReference.child(refNumber).set({
+      'Date': payment['date'],
+      'PaidBy': payment['paidBy'],
+      'PaymentAmount': payment['paymentAmount'],
+      'ProofImage': payment['proofImage'],
+      'RoomNum': payment['roomNum'],
+      'PaymentStatus': false,
+    });
+
+    // Remove the payment record from NewPayment
+    _newPaymentReference.child(refNumber).remove();
+
+    // Refresh the payment data
+    getPayments();
+  }
 
 
   @override
@@ -25,7 +104,7 @@ class _PaymentManageState extends State<PaymentManage> {
 
     return Scaffold(
       endDrawer: const Drawer(
-        child: LandlordDrawer(), // Call your custom drawer widget here
+        child: LandlordDrawer(),
       ),
       body: SingleChildScrollView(
         child: SizedBox(
@@ -107,35 +186,32 @@ class _PaymentManageState extends State<PaymentManage> {
                           decoration: TextDecoration.none,
                         ),
                       ),
-                      // ListView for Recent Payments
+                      // Payment Data ListView
                       ListView(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        children: const [
-                          // Add your ListTile widgets here
-                          Card(
+                        children: paymentData.map((payment) {
+                          return Card(
                             elevation: 3,
                             child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: AssetImage('assets/ipecs-mobile/images/user1.png'),
+                              leading: const CircleAvatar(
+                                backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
                               title: Text(
-                                'Anna Croft',
-                                style: TextStyle(
+                                '${payment['paidBy']}',
+                                style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xff1f375b),
                                   decoration: TextDecoration.none,
                                 ),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 5),
+                                children: <Widget>[
                                   Text(
-                                    'Room #1',
-                                    style: TextStyle(
+                                    '${payment['ref']}',
+                                    style: const TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -143,10 +219,9 @@ class _PaymentManageState extends State<PaymentManage> {
                                       decoration: TextDecoration.none,
                                     ),
                                   ),
-                                  SizedBox(height: 5),
                                   Text(
-                                    'June 9, 2023',
-                                    style: TextStyle(
+                                    '${payment['roomNum']}',
+                                    style: const TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -154,10 +229,19 @@ class _PaymentManageState extends State<PaymentManage> {
                                       decoration: TextDecoration.none,
                                     ),
                                   ),
-                                  SizedBox(height: 5),
                                   Text(
-                                    '₱300',
-                                    style: TextStyle(
+                                    '${payment['date']}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xff9ba7b1),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                  Text(
+                                    '₱${payment['paymentAmount']}',
+                                    style: const TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -172,28 +256,22 @@ class _PaymentManageState extends State<PaymentManage> {
                                 children: [
                                   IconButton(
                                     icon: Icon(Icons.check, color: Colors.green),
-                                    onPressed: null, // Set to null
-
+                                    onPressed: () {
+                                      handleCheckButtonPress(payment);
+                                    },
                                   ),
                                   SizedBox(width: 10),
                                   IconButton(
                                     icon: Icon(Icons.close, color: Colors.red),
-                                    onPressed: null, // Set to null
-
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.image, color: Colors.red),
-                                    onPressed: null, // Set to null
-
+                                    onPressed: () {
+                                      handleCloseButtonPress(payment);
+                                    },
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          SizedBox(height: 15),
-
-                          // Add more ListTiles as needed
-                        ],
+                          );
+                        }).toList(),
                       ),
                     ],
                   ),

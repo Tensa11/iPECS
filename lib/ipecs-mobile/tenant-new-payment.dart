@@ -1,4 +1,7 @@
+import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
@@ -19,28 +22,47 @@ class _NewPaymentState extends State<NewPayment> {
   double sizeAxis = 1.0;
   double size = 1.0;
 
-  List<String> roomNumbers = ["Room-1", "Room-2", "Room-3", "Room-4"];
+  List<String> roomNumbers = ["Room-1", "Room-2", "Room-3", "Room-4", "Room-5", "Room-6"];
   String selectedRoomNumber = "Room-1"; // Initial selection
   XFile? imagePath; // Store the path to the uploaded image
+  final user = FirebaseAuth.instance.currentUser!;
   final DatabaseReference _database = FirebaseDatabase.instance.reference();
 
   TextEditingController referenceController = TextEditingController(); // Add a TextEditingController for the reference input
   TextEditingController paidByController = TextEditingController();
   TextEditingController amountController = TextEditingController();
 
-  // Method to submit payment data
-  void submitPayment() {
+  // Function to save the image to Firebase Storage
+  Future<void> saveImageToFirebaseStorage() async {
     if (imagePath != null) {
-      final String referenceNumber = referenceController.text; // Get the reference input from the user
-      final String currentDate = DateFormat('MM-dd-yyyy').format(DateTime.now());
-      final String userName = paidByController.text; // Change to use the user's input name
+      final String referenceNumber = referenceController.text;
+      final Reference storageReference = FirebaseStorage.instance
+          .ref()
+          .child('PaymentProof/$referenceNumber.png'); // Use .png as the format
+      final UploadTask uploadTask = storageReference.putFile(File(imagePath!.path));
+      await uploadTask.whenComplete(() {
+        print('Image uploaded to Firebase Storage');
+      }).catchError((error) {
+        print('Error uploading image to Firebase Storage: $error');
+      });
+    }
+  }
 
+  // Updated submitPayment function to include image upload
+  void submitPayment() async {
+    if (imagePath != null) {
+      final String referenceNumber = referenceController.text;
+      final String currentDate = DateFormat('MM-dd-yyyy').format(DateTime.now());
+      final String userName = paidByController.text;
+
+      // Save the image to Firebase Storage
+      await saveImageToFirebaseStorage();
 
       final Map<String, dynamic> paymentData = {
         'Date': currentDate,
         'PaidBy': userName,
-        'PaymentAmount': amountController.text, // Replace with the actual payment amount
-        'ProofImage': imagePath!.path,
+        'PaymentAmount': amountController.text,
+        'ProofImage': 'PaymentProof/$referenceNumber.png', // Update with the correct path in Storage
         'RoomNum': selectedRoomNumber,
       };
 
@@ -270,46 +292,46 @@ class _NewPaymentState extends State<NewPayment> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 59 * sizeAxis),
-                  width: double.infinity,
-                  height: 56 * sizeAxis,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xffe8ecf4)),
-                    color: const Color(0xfff7f7f8),
-                    borderRadius: BorderRadius.circular(8 * sizeAxis),
-                  ),
-                  child: TextButton(
-                    onPressed: () async {
-                      final ImagePicker _picker = ImagePicker();
-                      final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
-                      if (pickedImage != null) {
-                        setState(() {
-                          imagePath = pickedImage;
-                        });
-                      }
-                    },
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            imagePath == null ? 'Proof of Payment' : imagePath!.name, // Use the image name if it's not null
-                            style: GoogleFonts.urbanist(
-                              fontSize: 15 * size,
-                              fontWeight: FontWeight.w500,
-                              height: 1.25 * size / sizeAxis,
-                              color: imagePath == null ? const Color(0xff8390a1) : const Color(0xff000000),
+                    margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 59 * sizeAxis),
+                    width: double.infinity,
+                    height: 56 * sizeAxis,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xffe8ecf4)),
+                      color: const Color(0xfff7f7f8),
+                      borderRadius: BorderRadius.circular(8 * sizeAxis),
+                    ),
+                    child: TextButton(
+                      onPressed: () async {
+                        final ImagePicker _picker = ImagePicker();
+                        final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+                        if (pickedImage != null) {
+                          setState(() {
+                            imagePath = pickedImage;
+                          });
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              imagePath == null ? 'Proof of Payment' : imagePath!.name, // Use the image name if it's not null
+                              style: GoogleFonts.urbanist(
+                                fontSize: 15 * size,
+                                fontWeight: FontWeight.w500,
+                                height: 1.25 * size / sizeAxis,
+                                color: imagePath == null ? const Color(0xff8390a1) : const Color(0xff000000),
+                              ),
                             ),
                           ),
-                        ),
-                        const Icon(Icons.upload, color: Color(0xff8390a1)),
-                      ],
-                    ),
-                  )
+                          const Icon(Icons.upload, color: Color(0xff8390a1)),
+                        ],
+                      ),
+                    )
                 ),
                 Container(
                   margin: EdgeInsets.fromLTRB(39 * sizeAxis, 0 * sizeAxis, 36 * sizeAxis, 0 * sizeAxis),
                   child: TextButton(
-                    onPressed: submitPayment, // Call the submitPayment function when the button is pressed
+                    onPressed: submitPayment,
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                     ),

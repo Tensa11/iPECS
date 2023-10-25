@@ -9,12 +9,11 @@ class TenantRooms extends StatefulWidget {
   const TenantRooms({Key? key}) : super(key: key);
 
   @override
-  _TenantRooms createState() => _TenantRooms();
+  _TenantRoomsState createState() => _TenantRoomsState();
 }
 
-class _TenantRooms extends State<TenantRooms> {
-  final DatabaseReference _databaseReference =
-  FirebaseDatabase.instance.ref().child("Rooms");
+class _TenantRoomsState extends State<TenantRooms> {
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance.ref().child("Rooms");
   final auth = FirebaseAuth.instance;
   User? currentUser;
   List<Map<String, dynamic>> roomData = [];
@@ -29,11 +28,9 @@ class _TenantRooms extends State<TenantRooms> {
     currentUser = auth.currentUser;
     if (currentUser != null) {
       print("USER ID: ${currentUser?.uid}");
-      // Add a listener to the database reference to get room data
       _databaseReference.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
-          // Filter rooms based on the authenticated user's UID
           roomData = data.entries.where((entry) {
             final room = entry.value;
             return room is Map &&
@@ -56,6 +53,7 @@ class _TenantRooms extends State<TenantRooms> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
@@ -64,126 +62,134 @@ class _TenantRooms extends State<TenantRooms> {
 
     return Scaffold(
       endDrawer: const Drawer(
-        child: TenantDrawer(), // Call your custom drawer widget here
+        child: TenantDrawer(),
       ),
-      body: Stack(
-        children: [
-          Container(
-            color: const Color(0xffffffff),
+      body: SingleChildScrollView(
+        child: SizedBox(
+          width: double.infinity,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(24 * sizeAxis, 30 * sizeAxis, 24 * sizeAxis, 0 * sizeAxis),
             width: double.infinity,
-            child: Row(
+            decoration: const BoxDecoration(
+              color: Color(0xffffffff),
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  height: 120,
-                  width: 100,
-                  margin:
-                  EdgeInsets.fromLTRB(0 * sizeAxis, 20 * sizeAxis, 200 * sizeAxis, 0 * sizeAxis),
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const TenantProfile(),
-                        ),
-                      );
-                    },
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                    ),
-                    child: Container(
-                      width: 48 * sizeAxis,
-                      height: 48 * sizeAxis,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24 * sizeAxis),
-                        image: const DecorationImage(
-                          fit: BoxFit.cover,
-                          image: AssetImage(
-                              'assets/ipecs-mobile/images/user1.png'),
+                  margin: EdgeInsets.fromLTRB(8 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 32 * sizeAxis),
+                  width: double.infinity,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 200 * sizeAxis, 0 * sizeAxis),
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => const TenantProfile(),
+                              ),
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: Container(
+                            width: 48 * sizeAxis,
+                            height: 48 * sizeAxis,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24 * sizeAxis),
+                              image: const DecorationImage(
+                                fit: BoxFit.cover,
+                                image: AssetImage('assets/ipecs-mobile/images/user1.png'),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      Container(
+                        margin: EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
+                        child: Builder(
+                          builder: (context) => IconButton(
+                            icon: Image.asset(
+                              'assets/ipecs-mobile/images/drawer.png',
+                              width: 25 * sizeAxis,
+                              height: 18 * sizeAxis,
+                            ),
+                            onPressed: () {
+                              Scaffold.of(context).openEndDrawer();
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                // Recent Payments ListView
                 Container(
-                  margin:
-                  EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
-                  child: Builder(
-                    builder: (context) => IconButton(
-                      icon: Image.asset(
-                        'assets/ipecs-mobile/images/drawer.png',
-                        width: 25 * sizeAxis,
-                        height: 18 * sizeAxis,
+                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 13 * sizeAxis),
+                  width: double.infinity,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Rooms',
+                        style: SafeGoogleFont(
+                          'Urbanist',
+                          fontSize: 18 * size,
+                          fontWeight: FontWeight.w500,
+                          height: 1.2 * size / sizeAxis,
+                          color: const Color(0xff5c5473),
+                          decoration: TextDecoration.none,
+                        ),
                       ),
-                      onPressed: () {
-                        Scaffold.of(context).openEndDrawer();
-                      },
-                    ),
+                      // Payment Data ListView
+                      ListView(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: roomData.map((rooms) {
+                          return Card(
+                            elevation: 3,
+                            child: ListTile(
+                              leading: const CircleAvatar(
+                                backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
+                              ),
+                              title: Text(
+                                '${rooms['name']}',
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  decoration: TextDecoration.none,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    '${rooms['currentcredit']}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xff9ba7b1),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          Align(
-            alignment: const AlignmentDirectional(-0.80, -0.50),
-            child: SizedBox(
-              width: 100,
-              child: Text(
-                'Rooms',
-                style: SafeGoogleFont(
-                  'Urbanist',
-                  fontSize: 18 * size,
-                  color: const Color(0xff5c5473),
-                  decoration: TextDecoration.none,
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: const AlignmentDirectional(0, .3),
-            child: SingleChildScrollView(
-              child: SizedBox(
-                height: 450,
-                width: 330,
-                child: roomData.isNotEmpty
-                    ? ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: roomData.length,
-                      itemBuilder: (context, index) {
-                        final room = roomData[index];
-                        return Card(
-                          elevation: 3,
-                          child: ListTile(
-                            title: Text(
-                              'RoomID: ${room['name']}',
-                              style: const TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Current Room Credit: ₱${(room['currentcredit'] ?? 0).toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontFamily: 'Urbanist',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xff9ba7b1),
-                                decoration: TextDecoration.none,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    )
-                    : const Text("No rooms found", style: TextStyle(
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          )
-        ],
+        ),
       ),
     );
   }

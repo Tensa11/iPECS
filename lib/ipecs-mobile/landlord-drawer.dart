@@ -126,7 +126,7 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
                   MaterialPageRoute(
                     builder: (context) => const PaymentManage(),
                   ),
-                );              },
+                );},
             ),
             // ListTile(
             //   leading: const Icon(
@@ -142,7 +142,7 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
             //   onTap: () {
             //     Navigator.of(context).push(
             //       MaterialPageRoute(
-            //         builder: (context) => const LandlordProfile(),
+            //         builder: (context) => const PaymentManage(),
             //       ),
             //     );
             //   },

@@ -92,6 +92,7 @@ flutter:
     - assets/ipecs-mobile/images/user2.png
     - assets/ipecs-mobile/images/user3.png
     - assets/ipecs-mobile/images/user4.png
+    - assets/ipecs-mobile/images/userCartoon.png
     - assets/ipecs-mobile/images/drawer.png
     - assets/lottie/LottieAnimationIntro.json
 
