@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:iPECS/utils.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class PaymentHistory extends StatefulWidget {
   const PaymentHistory({Key? key}) : super(key: key);
@@ -46,6 +48,7 @@ class _PaymentHistoryState extends State<PaymentHistory> {
               'date': payment['Date'],
               'paidBy': payment['PaidBy'],
               'paymentAmount': payment['PaymentAmount'],
+              'paymentStatus': payment['PaymentStatus'],
               'proofImage': payment['ProofImage'],
               'roomNum': payment['RoomNum'],
             };
@@ -72,6 +75,44 @@ class _PaymentHistoryState extends State<PaymentHistory> {
       }
     }
     return ""; // Return an empty string if no room is found
+  }
+
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  void showImageDialog(String imageName) async {
+    final String imagePath = 'PaymentProof/$imageName.png'; // Update with your folder path
+
+    try {
+      final ref = _storage.ref().child(imagePath);
+      final String imageUrl = await ref.getDownloadURL();
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(imageName, style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                Image.network(imageUrl), // Display the image from Firebase Storage
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      print('Error fetching image: $e');
+    }
+  }
+
+  void handleImageTap(String imageName) {
+    Fluttertoast.showToast(
+      msg: 'Image Name: $imageName',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP,
+    );
+    showImageDialog(imageName);
   }
 
   @override
@@ -175,6 +216,9 @@ class _PaymentHistoryState extends State<PaymentHistory> {
                               leading: const CircleAvatar(
                                 backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
+                              onTap: () {
+                                handleImageTap(payment['ref']);
+                              },
                               title: Text(
                                 '${payment['paidBy']}',
                                 style: const TextStyle(
@@ -187,6 +231,16 @@ class _PaymentHistoryState extends State<PaymentHistory> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
+                                  Text(
+                                    '${payment['ref']}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xff9ba7b1),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
                                   Text(
                                     '${payment['roomNum']}',
                                     style: const TextStyle(
@@ -218,6 +272,10 @@ class _PaymentHistoryState extends State<PaymentHistory> {
                                     ),
                                   ),
                                 ],
+                              ),
+                              trailing: Icon(
+                                payment['paymentStatus'] ? Icons.check_circle : Icons.cancel,
+                                color: payment['paymentStatus'] ? Colors.green : Colors.red,
                               ),
                             ),
                           );

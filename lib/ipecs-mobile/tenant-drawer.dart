@@ -5,6 +5,8 @@ import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
 import 'package:iPECS/ipecs-mobile/tenant-payments-history.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:iPECS/ipecs-mobile/tenant-rooms.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class TenantDrawer extends StatefulWidget {
   const TenantDrawer({Key? key}) : super(key: key);
@@ -30,7 +32,7 @@ class _TenantDrawerState extends State<TenantDrawer> {
           children: <Widget>[
             const UserAccountsDrawerHeader(
               accountName: Text(
-                'Ana Croft',
+                'Username',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -38,7 +40,7 @@ class _TenantDrawerState extends State<TenantDrawer> {
                 ),
               ),
               accountEmail: Text(
-                'john.doe@example.com',
+                'Email',
                 style: TextStyle(
                   fontSize: 15,
                   color: Color(0xff012970),
@@ -144,9 +146,9 @@ class _TenantDrawerState extends State<TenantDrawer> {
                   MaterialPageRoute(
                     builder: (context) => const TenantLogin(),
                   ),
-                );              },
+                );
+                },
             ),
-
           ],
         ),
       ),

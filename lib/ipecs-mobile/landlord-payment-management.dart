@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 
 class PaymentManage extends StatefulWidget {
   const PaymentManage({Key? key}) : super(key: key);
@@ -13,7 +16,7 @@ class PaymentManage extends StatefulWidget {
 }
 
 class _PaymentManageState extends State<PaymentManage> {
-  final DatabaseReference _newPaymentReference = FirebaseDatabase.instance.reference().child("NewPayment");
+  final DatabaseReference _paymentManageReference = FirebaseDatabase.instance.reference().child("PaymentManage");
   final DatabaseReference _paymentRecordReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
   final auth = FirebaseAuth.instance;
   User? currentUser;
@@ -29,7 +32,7 @@ class _PaymentManageState extends State<PaymentManage> {
     currentUser = auth.currentUser;
     if (currentUser != null) {
       print("USER ID: ${currentUser?.uid}");
-      _newPaymentReference.onValue.listen((event) {
+      _paymentManageReference.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
           paymentData = data.entries.map<Map<String, dynamic>>((entry) {
@@ -54,10 +57,10 @@ class _PaymentManageState extends State<PaymentManage> {
   }
 
   void handleCheckButtonPress(Map<String, dynamic> payment) {
-    // Use the same reference number from NewPayment
+    // Use the same reference number from PaymentManage
     String refNumber = payment['ref'];
 
-    // Copy data from NewPayment to PaymentRecord and set PaymentStatus to true
+    // Copy data from PaymentManage to PaymentRecord and set PaymentStatus to true
     _paymentRecordReference.child(refNumber).set({
       'Date': payment['date'],
       'PaidBy': payment['paidBy'],
@@ -67,18 +70,18 @@ class _PaymentManageState extends State<PaymentManage> {
       'PaymentStatus': true,
     });
 
-    // Remove the payment record from NewPayment
-    _newPaymentReference.child(refNumber).remove();
+    // Remove the payment record from PaymentManage
+    _paymentManageReference.child(refNumber).remove();
 
     // Refresh the payment data
     getPayments();
   }
 
   void handleCloseButtonPress(Map<String, dynamic> payment) {
-    // Use the same reference number from NewPayment
+    // Use the same reference number from PaymentManage
     String refNumber = payment['ref'];
 
-    // Copy data from NewPayment to PaymentRecord and set PaymentStatus to false
+    // Copy data from PaymentManage to PaymentRecord and set PaymentStatus to false
     _paymentRecordReference.child(refNumber).set({
       'Date': payment['date'],
       'PaidBy': payment['paidBy'],
@@ -88,13 +91,51 @@ class _PaymentManageState extends State<PaymentManage> {
       'PaymentStatus': false,
     });
 
-    // Remove the payment record from NewPayment
-    _newPaymentReference.child(refNumber).remove();
+    // Remove the payment record from PaymentManage
+    _paymentManageReference.child(refNumber).remove();
 
     // Refresh the payment data
     getPayments();
   }
 
+
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  void showImageDialog(String imageName) async {
+    final String imagePath = 'PaymentProof/$imageName.png'; // Update with your folder path
+
+    try {
+      final ref = _storage.ref().child(imagePath);
+      final String imageUrl = await ref.getDownloadURL();
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(imageName, style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                Image.network(imageUrl), // Display the image from Firebase Storage
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      print('Error fetching image: $e');
+    }
+  }
+
+  void handleImageTap(String imageName) {
+    Fluttertoast.showToast(
+      msg: 'Image Name: $imageName',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP,
+    );
+    showImageDialog(imageName);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -197,6 +238,9 @@ class _PaymentManageState extends State<PaymentManage> {
                               leading: const CircleAvatar(
                                 backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
+                              onTap: () {
+                                handleImageTap(payment['ref']);
+                              },
                               title: Text(
                                 '${payment['paidBy']}',
                                 style: const TextStyle(
@@ -255,14 +299,14 @@ class _PaymentManageState extends State<PaymentManage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.check, color: Colors.green),
+                                    icon: const Icon(Icons.check, color: Colors.green),
                                     onPressed: () {
                                       handleCheckButtonPress(payment);
                                     },
                                   ),
-                                  SizedBox(width: 10),
+                                  const SizedBox(width: 10),
                                   IconButton(
-                                    icon: Icon(Icons.close, color: Colors.red),
+                                    icon: const Icon(Icons.close, color: Colors.red),
                                     onPressed: () {
                                       handleCloseButtonPress(payment);
                                     },

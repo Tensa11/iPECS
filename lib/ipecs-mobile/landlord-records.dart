@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class LandlordRecords extends StatefulWidget {
   const LandlordRecords({Key? key}) : super(key: key);
@@ -52,6 +54,45 @@ class _LandlordRecordsState extends State<LandlordRecords> {
       print("No User");
     }
   }
+
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  void showImageDialog(String imageName) async {
+    final String imagePath = 'PaymentProof/$imageName.png'; // Update with your folder path
+
+    try {
+      final ref = _storage.ref().child(imagePath);
+      final String imageUrl = await ref.getDownloadURL();
+
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(imageName, style: TextStyle(fontWeight: FontWeight.bold)),
+                SizedBox(height: 10),
+                Image.network(imageUrl), // Display the image from Firebase Storage
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      print('Error fetching image: $e');
+    }
+  }
+
+  void handleImageTap(String imageName) {
+    Fluttertoast.showToast(
+      msg: 'Image Name: $imageName',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP,
+    );
+    showImageDialog(imageName);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +195,9 @@ class _LandlordRecordsState extends State<LandlordRecords> {
                               leading: const CircleAvatar(
                                 backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
+                              onTap: () {
+                                handleImageTap(payment['ref']);
+                              },
                               title: Text(
                                 '${payment['paidBy']}',
                                 style: const TextStyle(

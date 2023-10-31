@@ -4,6 +4,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iPECS/ipecs-mobile/tenant-dashboard.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:image_picker/image_picker.dart';
@@ -66,9 +67,16 @@ class _NewPaymentState extends State<NewPayment> {
         'RoomNum': selectedRoomNumber,
       };
 
-      _database.child('NewPayment').child(referenceNumber).set(paymentData).then((_) {
+      _database.child('PaymentManage').child(referenceNumber).set(paymentData).then((_) {
         // Data saved successfully
         print('Payment data saved to Firebase: $paymentData');
+
+        // Navigate to another page here
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => const TenantDashboard(), // Replace 'AnotherPage' with the page you want to navigate to
+          ),
+        );
       }).catchError((error) {
         // Handle any errors that occur during the process
         print('Error saving payment data: $error');

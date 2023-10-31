@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-login.dart';
+import 'package:iPECS/ipecs-mobile/tenant-dashboard.dart';
 import 'package:iPECS/ipecs-mobile/tenant-rooms.dart';
 import 'package:iPECS/utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,7 +43,7 @@ class _TenantLoginState extends State<TenantLogin> {
         if (snapshotValue != null) {
           if ((snapshotValue as Map)['userRole'] == 'Tenant') {
             // If the user is a Tenant, navigate to TenantRooms
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const TenantRooms()));
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const TenantDashboard()));
           } else if ((snapshotValue as Map)['userRole'] == 'Landlord') {
             // If the user is a Landlord, show an error message
             setState(() {
