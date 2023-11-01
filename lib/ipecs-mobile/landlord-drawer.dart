@@ -5,6 +5,8 @@ import 'package:iPECS/ipecs-mobile/landlord-manage-user.dart';
 import 'package:iPECS/ipecs-mobile/landlord-payment-management.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/ipecs-mobile/landlord-records.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class LandlordDrawer extends StatefulWidget {
   const LandlordDrawer({Key? key}) : super(key: key);
@@ -14,6 +16,8 @@ class LandlordDrawer extends StatefulWidget {
 }
 
 class _LandlordDrawerState extends State<LandlordDrawer> {
+
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -30,7 +34,7 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
           children: <Widget>[
             const UserAccountsDrawerHeader(
               accountName: Text(
-                'Clover Glove',
+                "Name",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -38,7 +42,7 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
                 ),
               ),
               accountEmail: Text(
-                'john.doe@example.com',
+                "Email",
                 style: TextStyle(
                   fontSize: 15,
                   color: Color(0xff012970),

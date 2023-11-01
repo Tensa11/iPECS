@@ -23,8 +23,8 @@ class _NewPaymentState extends State<NewPayment> {
   double sizeAxis = 1.0;
   double size = 1.0;
 
-  List<String> roomNumbers = ["Room-1", "Room-2", "Room-3", "Room-4", "Room-5", "Room-6"];
-  String selectedRoomNumber = "Room-1"; // Initial selection
+  List<String> roomNumbers = []; // Update to an empty list
+  String selectedRoomNumber = ""; // Set the initial selection to an empty string
   XFile? imagePath; // Store the path to the uploaded image
   final user = FirebaseAuth.instance.currentUser!;
   final DatabaseReference _database = FirebaseDatabase.instance.reference();
@@ -82,6 +82,33 @@ class _NewPaymentState extends State<NewPayment> {
         print('Error saving payment data: $error');
       });
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAvailableRooms();
+  }
+
+  // Fetch available room numbers from Firebase
+  void fetchAvailableRooms() {
+    final DatabaseReference _roomsReference = FirebaseDatabase.instance.reference().child("Rooms");
+
+    _roomsReference.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data is Map) {
+        final availableRooms = data.keys.toList().cast<String>(); // Convert to List<String>
+
+        setState(() {
+          roomNumbers = availableRooms;
+          if (availableRooms.isNotEmpty) {
+            selectedRoomNumber = availableRooms[0];
+          }
+        });
+      }
+    }, onError: (error) {
+      print("Error fetching available room numbers: $error");
+    });
   }
 
   @override

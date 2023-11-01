@@ -27,8 +27,8 @@ class _AddUserState extends State<AddUser> {
 
   bool _isObscure = true;
 
-  List<String> roomNumbers = ["Room-1", "Room-2", "Room-3", "Room-4", "Room-5", "Room-6"];
-  String selectedRoomNumber = "Room-1"; // Initial selection
+  List<String> roomNumbers = []; // Update to an empty list
+  String selectedRoomNumber = ""; // Set the initial selection to an empty string
 
   // Function to create a new Tenant user
   Future<void> createUser(String email, String password) async {
@@ -58,6 +58,33 @@ class _AddUserState extends State<AddUser> {
     } catch (error) {
       print('Error creating user: $error');
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAvailableRooms();
+  }
+
+  // Fetch available room numbers from Firebase
+  void fetchAvailableRooms() {
+    final DatabaseReference _roomsReference = FirebaseDatabase.instance.reference().child("Rooms");
+
+    _roomsReference.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data is Map) {
+        final availableRooms = data.keys.toList().cast<String>(); // Convert to List<String>
+
+        setState(() {
+          roomNumbers = availableRooms;
+          if (availableRooms.isNotEmpty) {
+            selectedRoomNumber = availableRooms[0];
+          }
+        });
+      }
+    }, onError: (error) {
+      print("Error fetching available room numbers: $error");
+    });
   }
 
   @override

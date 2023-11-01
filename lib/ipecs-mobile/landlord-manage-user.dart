@@ -120,7 +120,7 @@ class _ManageUserState extends State<ManageUser> {
                                 backgroundImage: AssetImage('assets/ipecs-mobile/images/user1.png'),
                               ),
                               title: Text(
-                                'User 1',
+                                'Name',
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 16,
@@ -134,7 +134,7 @@ class _ManageUserState extends State<ManageUser> {
                                 children: [
                                   SizedBox(height: 5),
                                   Text(
-                                    'Room #1',
+                                    'Room-1',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -145,7 +145,7 @@ class _ManageUserState extends State<ManageUser> {
                                   ),
                                   SizedBox(height: 5),
                                   Text(
-                                    'anacrof@gmail.com',
+                                    'Gmail',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -156,7 +156,7 @@ class _ManageUserState extends State<ManageUser> {
                                   ),
                                   SizedBox(height: 5),
                                   Text(
-                                    '₱300',
+                                    'Tenant',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -189,82 +189,6 @@ class _ManageUserState extends State<ManageUser> {
                             ),
                           ),
                           SizedBox(height: 15),
-                          Card(
-                            elevation: 3,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: AssetImage('assets/ipecs-mobile/images/user1.png'),
-                              ),
-                              title: Text(
-                                'User 2',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xff1f375b),
-                                  decoration: TextDecoration.none,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 5),
-                                  Text(
-                                    'Room #1',
-                                    style: TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    'yors@gmail.com',
-                                    style: TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    '₱300',
-                                    style: TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.check, color: Colors.green),
-                                    onPressed: null, // Set to null
-
-                                  ),
-                                  SizedBox(width: 10),
-                                  IconButton(
-                                    icon: Icon(Icons.close, color: Colors.red),
-                                    onPressed: null, // Set to null
-
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.edit, color: Colors.red),
-                                    onPressed: null, // Set to null
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                           // Add more ListTiles as needed
                         ],
                       ),
@@ -291,7 +215,6 @@ class _ManageUserState extends State<ManageUser> {
           color: Color(0xffdfb153), // Set the desired color
         ),
       ),
-
     );
   }
 }
