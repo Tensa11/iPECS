@@ -141,13 +141,18 @@ class _TenantDrawerState extends State<TenantDrawer> {
                   color: Colors.white,
                 ),
               ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const TenantLogin(),
-                  ),
-                );
-                },
+              onTap: () async {
+                try {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.of(context).pushReplacement(  // Use pushReplacement to prevent going back to the previous screen
+                    MaterialPageRoute(
+                      builder: (context) => const TenantLogin(),
+                    ),
+                  );
+                } catch (e) {
+                  print('Error logging out: $e');
+                }
+              },
             ),
           ],
         ),

@@ -1,9 +1,41 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:iPECS/utils.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+Future<void> _firebaseBackgroundMessageHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+
+  print("Handling a background message: ${message.messageId}");
+
+  // Parse the message data
+  String roomName = message.data['roomName'];
+  double currentCredit = double.parse(message.data['currentCredit']);
+
+  // Show a local notification
+  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'channelId',
+      'channelName',
+      channelDescription: 'channelDescription',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false);
+  var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  await flutterLocalNotificationsPlugin.show(
+      0,
+      'iPECS: Daily Credit Alert',
+      'Your Credit ₱${currentCredit.toStringAsFixed(2)} in $roomName is at critical, add new credit to avoid disconnection',
+      platformChannelSpecifics,
+      payload: 'item x');
+}
 
 class TenantDashboard extends StatefulWidget {
   const TenantDashboard({Key? key}) : super(key: key);
@@ -22,6 +54,10 @@ class _TenantDashboardState extends State<TenantDashboard> {
   void initState() {
     super.initState();
     getRooms();
+    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
   }
 
   Future<void> getRooms() async {
@@ -41,6 +77,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
             return {
               'name': entry.key,
               'currentcredit': room['CurrentCredit'] ?? 0,
+              'creditcriticallevel': room['CreditCriticalLevel'] ?? 0,
             };
           }).toList();
           setState(() {});
@@ -51,6 +88,23 @@ class _TenantDashboardState extends State<TenantDashboard> {
     } else {
       print("No User");
     }
+  }
+
+  Future<void> showNotification(String roomName, double currentCredit) async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'channelId',
+        'channelName',
+        channelDescription: 'channelDescription',
+        importance: Importance.max,
+        priority: Priority.high,
+        showWhen: false);
+    var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+        0,
+        'iPECS: Daily Credit Alert',
+        'Your Credit ₱${currentCredit.toStringAsFixed(2)} in $roomName is at critical, add new credit to avoid disconnection',
+        platformChannelSpecifics,
+        payload: 'item x');
   }
 
   @override
@@ -148,6 +202,10 @@ class _TenantDashboardState extends State<TenantDashboard> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: roomData.map((rooms) {
+                          bool isCreditCritical = rooms['creditcriticallevel'] > rooms['currentcredit'];
+                          if (isCreditCritical) {
+                            showNotification(rooms['name'], rooms['currentcredit']);
+                          }
                           return Card(
                             elevation: 3,
                             child: ListTile(
@@ -167,17 +225,31 @@ class _TenantDashboardState extends State<TenantDashboard> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    'Current Room Credit: ₱${(rooms['currentcredit'] ?? 0).toStringAsFixed(2)}',
-                                    style: const TextStyle(
+                                    'Critical Level: ${rooms['creditcriticallevel']}',
+                                    style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Room Credit: ₱${(rooms['currentcredit'] ?? 0).toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                       decoration: TextDecoration.none,
                                     ),
                                   ),
                                 ],
                               ),
+                              trailing: isCreditCritical
+                                  ? Icon(
+                                Icons.warning,
+                                color: Colors.orange, // Set icon color to orange
+                              )
+                                  : null,
                             ),
                           );
                         }).toList(),
@@ -190,6 +262,112 @@ class _TenantDashboardState extends State<TenantDashboard> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showEditCreditCriticalLevelDialog();
+        },
+        child: Icon(Icons.settings),
+        backgroundColor: Color(0xffdfb153),
+      ),
     );
+  }
+
+  void _showEditCreditCriticalLevelDialog() {
+    double baseWidth = 375;
+    double sizeAxis = MediaQuery.of(context).size.width / baseWidth;
+    double size = sizeAxis * 0.97;
+
+    TextEditingController controller = TextEditingController();
+    bool isSaveButtonEnabled = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                'Edit The Desired Critical Level',
+                style: SafeGoogleFont(
+                  'Urbanist',
+                  fontSize: 18 * size,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2 * size / sizeAxis,
+                  color: const Color(0xff5c5473),
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              content: Container(
+                padding: EdgeInsets.all(16.0 * size),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Ensure the AlertDialog is vertically centered
+                  children: [
+                    TextField(
+                      controller: controller,
+                      decoration: InputDecoration(labelText: 'New Credit Critical Level'),
+                      style: GoogleFonts.urbanist(
+                        fontSize: 15 * size,
+                        fontWeight: FontWeight.w500,
+                        height: 1.25 * size / sizeAxis,
+                        color: const Color(0xff000000),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        setState(() {
+                          isSaveButtonEnabled = double.tryParse(value) != null;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: SafeGoogleFont(
+                      'Urbanist',
+                      fontSize: 18 * size,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2 * size / sizeAxis,
+                      color: const Color(0xff5c5473),
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: isSaveButtonEnabled
+                      ? () {
+                    _saveCreditCriticalLevel(controller.text);
+                    Navigator.pop(context);
+                  }
+                      : null,
+                  child: Text(
+                    'Save',
+                    style: SafeGoogleFont(
+                      'Urbanist',
+                      fontSize: 18 * size,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2 * size / sizeAxis,
+                      color: const Color(0xff5c5473),
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  void _saveCreditCriticalLevel(String newCriticalLevel) {
+    // Update the credit critical level in the database
+    _databaseReference.child('Room-1').update({'CreditCriticalLevel': int.parse(newCriticalLevel)});
   }
 }
