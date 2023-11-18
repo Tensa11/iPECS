@@ -4,13 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:iPECS/firebase-messaging/notify.dart';
 import 'package:iPECS/firebase_options.dart';
-import 'package:iPECS/ipecs-mobile/TestTest.dart';
 import 'package:iPECS/ipecs-mobile/get-started.dart';
+import 'package:iPECS/ipecs-mobile/landlord-dashboard.dart';
 import 'package:iPECS/ipecs-mobile/tenant-dashboard.dart';
 import 'package:lottie/lottie.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
@@ -29,8 +30,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 	print('Handling a background message ${message.messageId}');
 }
 
-
-
 class MyApp extends StatelessWidget {
 	const MyApp({Key? key}) : super(key: key);
 
@@ -38,13 +37,39 @@ class MyApp extends StatelessWidget {
 	Widget build(BuildContext context) {
 		SystemChrome.setSystemUIOverlayStyle(
 				const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
-		return const MaterialApp(
+		return MaterialApp(
 			debugShowCheckedModeBanner: false,
 			title: 'iPECS',
-			home: SplashScreen(),
+			home: StreamBuilder<User?>(
+				stream: FirebaseAuth.instance.authStateChanges(),
+				builder: (BuildContext context, snapshot) {
+					if (snapshot.hasData) {
+						final user = snapshot.data;
+						if (user != null) {
+							// Fetch user role from Firebase Realtime Database
+							return StreamBuilder<DatabaseEvent>(
+								stream: FirebaseDatabase.instance.reference().child('Users').child(user.uid).onValue,
+								builder: (BuildContext context, snapshot) {
+									if (snapshot.hasData) {
+										final userRole = (snapshot.data!.snapshot.value as Map).cast<String, dynamic>()?['userRole'];
+										if (userRole == 'Tenant') {
+											return const TenantDashboard();
+										} else if (userRole == 'Landlord') {
+											return const LandlordDashboard();
+										}
+									}
+									return const SplashScreen();
+								},
+							);
+						}
+					}
+					return const SplashScreen();
+				},
+			),
 		);
 	}
 }
+
 
 class SplashScreen extends StatelessWidget {
 	const SplashScreen({Key? key}) : super(key: key);

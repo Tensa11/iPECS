@@ -19,8 +19,6 @@ class _TenantLoginState extends State<TenantLogin> {
   bool _isObscure = true;
   String _errorMessage = '';
 
-
-
   void _signIn() async {
     try {
       final loginUser = await FirebaseAuth.instance.signInWithEmailAndPassword(
