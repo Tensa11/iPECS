@@ -16,7 +16,21 @@ class LandlordDrawer extends StatefulWidget {
 }
 
 class _LandlordDrawerState extends State<LandlordDrawer> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.reference().child('Users');
 
+  Future<Map<String, dynamic>> getUserData() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      DatabaseEvent event = await _dbRef.child(user.uid).once();
+      if (event.snapshot.value != null) {
+        if (event.snapshot.value is Map) {
+          return Map<String, dynamic>.from(event.snapshot.value as Map);
+        }
+      }
+    }
+    return {};
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,32 +46,41 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const UserAccountsDrawerHeader(
-              accountName: Text(
-                "Name",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xff012970),
-                ),
-              ),
-              accountEmail: Text(
-                "Email",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xff012970),
-                ),
-              ),
-              currentAccountPicture: CircleAvatar(
-                backgroundImage: AssetImage('assets/ipecs-mobile/images/user2.png'),
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xffE6DAC5), Color(0xffdfb153)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
+            FutureBuilder(
+              future: getUserData(),
+              builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircularProgressIndicator();  // Show loading indicator while waiting for data
+                } else {
+                  return UserAccountsDrawerHeader(
+                    accountName: Text(
+                      snapshot.data?['userName'] ?? 'Username',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff012970),
+                      ),
+                    ),
+                    accountEmail: Text(
+                      snapshot.data?['email'] ?? 'Email',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color(0xff012970),
+                      ),
+                    ),
+                    currentAccountPicture: CircleAvatar(
+                      backgroundImage: AssetImage('assets/ipecs-mobile/images/user2.png'),
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xffE6DAC5), Color(0xffdfb153)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
             ListTile(
               leading: const Icon(

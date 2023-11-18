@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-payment-management.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
-import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'dart:ui';
 import 'package:iPECS/utils.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class LandlordDashboard extends StatefulWidget {
   const LandlordDashboard({Key? key}) : super(key: key);
@@ -15,8 +15,6 @@ class LandlordDashboard extends StatefulWidget {
 }
 
 class _LandlordDashboardState extends State<LandlordDashboard> {
-  final user = FirebaseAuth.instance.currentUser!;
-
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
