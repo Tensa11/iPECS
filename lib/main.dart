@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -12,23 +14,17 @@ import 'package:lottie/lottie.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-
-late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-
 Future <void> main() async {
 	WidgetsFlutterBinding.ensureInitialized();
-	flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
+	// flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 	await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-	// await FirebaseNotify().initNotification();
-	FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+	// final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+	// final initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+	// final initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+	// await flutterLocalNotificationsPlugin.initialize(initializationSettings);
 	runApp(const MyApp());
 }
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-	await Firebase.initializeApp();
-	print('Handling a background message ${message.messageId}');
-}
 
 class MyApp extends StatelessWidget {
 	const MyApp({Key? key}) : super(key: key);
@@ -40,6 +36,7 @@ class MyApp extends StatelessWidget {
 		return MaterialApp(
 			debugShowCheckedModeBanner: false,
 			title: 'iPECS',
+			// home: SplashScreen(),
 			home: StreamBuilder<User?>(
 				stream: FirebaseAuth.instance.authStateChanges(),
 				builder: (BuildContext context, snapshot) {
@@ -53,9 +50,9 @@ class MyApp extends StatelessWidget {
 									if (snapshot.hasData) {
 										final userRole = (snapshot.data!.snapshot.value as Map).cast<String, dynamic>()?['userRole'];
 										if (userRole == 'Tenant') {
-											return const TenantDashboard();
+											return const SplashScreenTenant();
 										} else if (userRole == 'Landlord') {
-											return const LandlordDashboard();
+											return const SplashScreenLandlord();
 										}
 									}
 									return const SplashScreen();
@@ -70,7 +67,6 @@ class MyApp extends StatelessWidget {
 	}
 }
 
-
 class SplashScreen extends StatelessWidget {
 	const SplashScreen({Key? key}) : super(key: key);
 
@@ -80,6 +76,38 @@ class SplashScreen extends StatelessWidget {
 			splash: Lottie.asset('assets/lottie/LottieAnimationIntro.json'),
 			// splash: Lottie.network('https://lottiefiles.com/animations/light-bulb-rrtnthBH0O'),
 			nextScreen: const GetStarted(),
+			splashIconSize: 900,
+			duration: 2000,
+			splashTransition: SplashTransition.fadeTransition,
+		);
+	}
+}
+
+class SplashScreenTenant extends StatelessWidget {
+	const SplashScreenTenant({Key? key}) : super(key: key);
+
+	@override
+	Widget build(BuildContext context) {
+		return AnimatedSplashScreen(
+			splash: Lottie.asset('assets/lottie/LottieAnimationIntro.json'),
+			// splash: Lottie.network('https://lottiefiles.com/animations/light-bulb-rrtnthBH0O'),
+			nextScreen: const TenantDashboard(),
+			splashIconSize: 900,
+			duration: 2000,
+			splashTransition: SplashTransition.fadeTransition,
+		);
+	}
+}
+
+class SplashScreenLandlord extends StatelessWidget {
+	const SplashScreenLandlord({Key? key}) : super(key: key);
+
+	@override
+	Widget build(BuildContext context) {
+		return AnimatedSplashScreen(
+			splash: Lottie.asset('assets/lottie/LottieAnimationIntro.json'),
+			// splash: Lottie.network('https://lottiefiles.com/animations/light-bulb-rrtnthBH0O'),
+			nextScreen: const LandlordDashboard(),
 			splashIconSize: 900,
 			duration: 2000,
 			splashTransition: SplashTransition.fadeTransition,

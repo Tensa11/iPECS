@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -11,14 +12,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-Future<void> _firebaseBackgroundMessageHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-
+Future<void> _firebaseBackgroundMessageHandler(RemoteMessage message) async {await Firebase.initializeApp();
   print("Handling a background message: ${message.messageId}");
 
   // Parse the message data
   String roomName = message.data['roomName'];
-  double currentCredit = double.parse(message.data['currentCredit']);
+  double currentCredit = double.tryParse(message.data['currentCredit'] ?? '') ?? 0;
 
   // Show a local notification
   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
@@ -49,6 +48,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
   final auth = FirebaseAuth.instance;
   User? currentUser;
   List<Map<String, dynamic>> roomData = [];
+  Timer? _timer;
 
   @override
   void initState() {
@@ -58,6 +58,17 @@ class _TenantDashboardState extends State<TenantDashboard> {
     var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
+
+    // Start the timer
+    _timer = Timer.periodic(Duration(seconds: 20), (Timer timer) {
+      // Check if the credit is critical
+      for (var room in roomData) {
+        bool isCreditCritical = room['creditcriticallevel'] > room['currentcredit'];
+        if (isCreditCritical) {
+          showNotification(room['name'], (room['currentcredit'] ?? 0).toDouble()); // Convert to double here
+        }
+      }
+    });
   }
 
   Future<void> getRooms() async {
@@ -204,7 +215,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                         children: roomData.map((rooms) {
                           bool isCreditCritical = rooms['creditcriticallevel'] > rooms['currentcredit'];
                           if (isCreditCritical) {
-                            showNotification(rooms['name'], rooms['currentcredit']);
+                            showNotification(rooms['name'], (rooms['currentcredit'] ?? 0).toDouble()); // Convert to double here
                           }
                           return Card(
                             elevation: 3,
@@ -248,8 +259,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                                   ? Icon(
                                 Icons.warning,
                                 color: Colors.orange, // Set icon color to orange
-                              )
-                                  : null,
+                              ) : null,
                             ),
                           );
                         }).toList(),
@@ -277,7 +287,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
     double sizeAxis = MediaQuery.of(context).size.width / baseWidth;
     double size = sizeAxis * 0.97;
 
-    TextEditingController controller = TextEditingController();
+    TextEditingController credAlertController = TextEditingController();
     bool isSaveButtonEnabled = false;
 
     showDialog(
@@ -303,7 +313,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                   mainAxisSize: MainAxisSize.min, // Ensure the AlertDialog is vertically centered
                   children: [
                     TextField(
-                      controller: controller,
+                      controller: credAlertController,
                       decoration: InputDecoration(labelText: 'New Credit Critical Level'),
                       style: GoogleFonts.urbanist(
                         fontSize: 15 * size,
@@ -341,7 +351,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                 TextButton(
                   onPressed: isSaveButtonEnabled
                       ? () {
-                    _saveCreditCriticalLevel(controller.text);
+                    _saveCreditCriticalLevel(credAlertController.text);
                     Navigator.pop(context);
                   }
                       : null,
@@ -364,10 +374,31 @@ class _TenantDashboardState extends State<TenantDashboard> {
       },
     );
   }
-
-
   void _saveCreditCriticalLevel(String newCriticalLevel) {
-    // Update the credit critical level in the database
-    _databaseReference.child('Room-1').update({'CreditCriticalLevel': int.parse(newCriticalLevel)});
+    currentUser = auth.currentUser;
+    if (currentUser != null) {
+      _databaseReference.once().then((event) {
+        DataSnapshot snapshot = event.snapshot;
+        Map<dynamic, dynamic>? rooms = snapshot.value as Map<dynamic, dynamic>?;
+        if (rooms != null) {
+          bool roomExists = false;
+          rooms.forEach((key, room) {
+            if (room['UserID'] == currentUser!.uid) {
+              roomExists = true;
+              _databaseReference.child(key).update({'CreditCriticalLevel': int.parse(newCriticalLevel)});
+            }
+          });
+          if (!roomExists) {
+            _databaseReference.push().set({
+              'CreditCriticalLevel': int.parse(newCriticalLevel),
+              'UserID': currentUser!.uid,
+              // Add other properties as needed
+            });
+          }
+        }
+      }).catchError((error) {
+        print("Error: $error");
+      });
+    }
   }
 }

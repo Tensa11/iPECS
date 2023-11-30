@@ -6,6 +6,7 @@ import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
 
 class LandlordRecords extends StatefulWidget {
   const LandlordRecords({Key? key}) : super(key: key);
@@ -45,6 +46,13 @@ class _LandlordRecordsState extends State<LandlordRecords> {
               'roomNum': payment['RoomNum'],
             };
           }).toList();
+          // Sort paymentData by date in descending order
+          paymentData.sort((a, b) {
+            var format = DateFormat("MM-dd-yyyy");
+            var dateA = format.parse(a['date']);
+            var dateB = format.parse(b['date']);
+            return dateB.compareTo(dateA);
+          });
           setState(() {});
         } else {
           print("Data is not in the expected format");
@@ -54,6 +62,7 @@ class _LandlordRecordsState extends State<LandlordRecords> {
       print("No User");
     }
   }
+
 
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
@@ -185,82 +194,85 @@ class _LandlordRecordsState extends State<LandlordRecords> {
                         ),
                       ),
                       // Replace this ListView with the one from your first code snippet
-                      ListView(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: paymentData.map((payment) {
-                          return Card(
-                            elevation: 3,
-                            child: ListTile(
-                              leading: const CircleAvatar(
-                                backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
-                              ),
-                              onTap: () {
-                                handleImageTap(payment['ref']);
-                              },
-                              title: Text(
-                                '${payment['paidBy']}',
-                                style: const TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  decoration: TextDecoration.none,
+                      StatefulBuilder(
+                        builder: (BuildContext context, StateSetter setState) {
+                          return ListView(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: paymentData.map((payment) {
+                              return Card(
+                                elevation: 3,
+                                child: ListTile(
+                                  leading: const CircleAvatar(
+                                    backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
+                                  ),
+                                  onTap: () {
+                                    handleImageTap(payment['ref']);
+                                  },
+                                  title: Text(
+                                    '${payment['paidBy']}',
+                                    style: const TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        '${payment['ref']}',
+                                        style: const TextStyle(
+                                          fontFamily: 'Urbanist',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xff9ba7b1),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${payment['roomNum']}',
+                                        style: const TextStyle(
+                                          fontFamily: 'Urbanist',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xff9ba7b1),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${payment['date']}',
+                                        style: const TextStyle(
+                                          fontFamily: 'Urbanist',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xff9ba7b1),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                      Text(
+                                        '₱${payment['paymentAmount']}',
+                                        style: const TextStyle(
+                                          fontFamily: 'Urbanist',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xff9ba7b1),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  trailing: Icon(
+                                    payment['paymentStatus'] ? Icons.check_circle : Icons.cancel,
+                                    color: payment['paymentStatus'] ? Colors.green : Colors.red,
+                                  ),
                                 ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    '${payment['ref']}',
-                                    style: const TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${payment['roomNum']}',
-                                    style: const TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${payment['date']}',
-                                    style: const TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                  Text(
-                                    '₱${payment['paymentAmount']}',
-                                    style: const TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: Icon(
-                                payment['paymentStatus'] ? Icons.check_circle : Icons.cancel,
-                                color: payment['paymentStatus'] ? Colors.green : Colors.red,
-                              ),
-                            ),
+                              );
+                            }).toList(),
                           );
-                        }).toList(),
+                        },
                       ),
-
                     ],
                   ),
                 ),

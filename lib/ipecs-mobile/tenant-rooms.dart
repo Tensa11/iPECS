@@ -1,8 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
+import 'package:iPECS/main.dart';
 import 'package:iPECS/utils.dart';
 
 class TenantRooms extends StatefulWidget {
@@ -41,6 +45,7 @@ class _TenantRoomsState extends State<TenantRooms> {
             return {
               'name': entry.key,
               'currentcredit': room['CurrentCredit'] ?? 0,
+              'creditcriticallevel': room['CreditCriticalLevel'] ?? 0,
             };
           }).toList();
           setState(() {});
@@ -149,6 +154,7 @@ class _TenantRoomsState extends State<TenantRooms> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         children: roomData.map((rooms) {
+                          bool isCreditCritical = rooms['creditcriticallevel'] > rooms['currentcredit'];
                           return Card(
                             elevation: 3,
                             child: ListTile(
@@ -168,17 +174,30 @@ class _TenantRoomsState extends State<TenantRooms> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
                                   Text(
-                                    '${rooms['currentcredit']}',
-                                    style: const TextStyle(
+                                    'Critical Level: ${(rooms['creditcriticallevel'] ?? 0).toStringAsFixed(2)}',
+                                    style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Room Credit: ₱${(rooms['currentcredit'] ?? 0).toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
                                       decoration: TextDecoration.none,
                                     ),
                                   ),
                                 ],
                               ),
+                              trailing: isCreditCritical
+                                  ? Icon(
+                                Icons.warning,
+                                color: Colors.orange,
+                              ) : null,
                             ),
                           );
                         }).toList(),
@@ -191,6 +210,124 @@ class _TenantRoomsState extends State<TenantRooms> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showEditCreditCriticalLevelDialog();
+        },
+        child: Icon(Icons.settings),
+        backgroundColor: Color(0xffdfb153),
+      ),
     );
   }
+void _showEditCreditCriticalLevelDialog() {
+  double baseWidth = 375;
+  double sizeAxis = MediaQuery.of(context).size.width / baseWidth;
+  double size = sizeAxis * 0.97;
+
+  TextEditingController credAlertController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text(
+              'Edit The Desired Critical Level',
+              style: SafeGoogleFont(
+                'Urbanist',
+                fontSize: 18 * size,
+                fontWeight: FontWeight.w500,
+                height: 1.2 * size / sizeAxis,
+                color: const Color(0xff5c5473),
+                decoration: TextDecoration.none,
+              ),
+            ),
+            content: Container(
+              padding: EdgeInsets.all(16.0 * size),
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Ensure the AlertDialog is vertically centered
+                children: [
+                  TextField(
+                    controller: credAlertController,
+                    decoration: InputDecoration(labelText: 'New Credit Critical Level'),
+                    style: GoogleFonts.urbanist(
+                      fontSize: 15 * size,
+                      fontWeight: FontWeight.w500,
+                      height: 1.25 * size / sizeAxis,
+                      color: const Color(0xff000000),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Cancel',
+                  style: SafeGoogleFont(
+                    'Urbanist',
+                    fontSize: 18 * size,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2 * size / sizeAxis,
+                    color: const Color(0xff5c5473),
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  _saveCreditCriticalLevel(credAlertController.text);
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'Save',
+                  style: SafeGoogleFont(
+                    'Urbanist',
+                    fontSize: 18 * size,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2 * size / sizeAxis,
+                    color: const Color(0xff5c5473),
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+void _saveCreditCriticalLevel(String newCriticalLevel) {
+  currentUser = auth.currentUser;
+  if (currentUser != null) {
+    _databaseReference.once().then((event) {
+      DataSnapshot snapshot = event.snapshot;
+      Map<dynamic, dynamic>? rooms = snapshot.value as Map<dynamic, dynamic>?;
+      if (rooms != null) {
+        bool roomExists = false;
+        rooms.forEach((key, room) {
+          if (room['UserID'] == currentUser!.uid) {
+            roomExists = true;
+            _databaseReference.child(key).update({'CreditCriticalLevel': int.parse(newCriticalLevel)});
+          }
+        });
+        if (!roomExists) {
+          _databaseReference.push().set({
+            'CreditCriticalLevel': int.parse(newCriticalLevel),
+            'UserID': currentUser!.uid,
+            // Add other properties as needed
+          });
+        }
+      }
+    }).catchError((error) {
+      print("Error: $error");
+    });
+  }
+}
 }
