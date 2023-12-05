@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-add-user.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
-import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
 import 'dart:ui';
 import 'package:iPECS/utils.dart';
 
@@ -16,6 +16,33 @@ class ManageUser extends StatefulWidget {
 
 class _ManageUserState extends State<ManageUser> {
   final user = FirebaseAuth.instance.currentUser!;
+  List<Map<String, dynamic>> userData = [];
+
+  @override
+  void initState() {
+    super.initState();
+    getUsers();
+  }
+
+  Future<void> getUsers() async {
+    final DatabaseReference _usersRef = FirebaseDatabase.instance.reference().child("Users");
+    DataSnapshot snapshot = await _usersRef.get();
+    if (snapshot.value is Map) {
+      Map<dynamic, dynamic> userValues = Map<dynamic, dynamic>.from(snapshot.value! as Map);
+      userValues.forEach((key, value) {
+        userData.add({
+          'id': key,
+          'roomNum': value['RoomNum'],
+          'username': value['username'],
+          'email': value['email'],
+          'contactNum': value['contactNum'],
+          'userStatus': value['userStatus'],
+        });
+      });
+      userData.sort((a, b) => a['roomNum'].compareTo(b['roomNum']));
+      setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +52,7 @@ class _ManageUserState extends State<ManageUser> {
 
     return Scaffold(
       endDrawer: const Drawer(
-        child: LandlordDrawer(), // Call your custom drawer widget here
+        child: LandlordDrawer(),
       ),
       body: SingleChildScrollView(
         child: SizedBox(
@@ -107,90 +134,87 @@ class _ManageUserState extends State<ManageUser> {
                           decoration: TextDecoration.none,
                         ),
                       ),
-                      // ListView for Recent Payments
-                      ListView(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        children: const [
-                          // Add your ListTile widgets here
-                          Card(
-                            elevation: 3,
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: AssetImage('assets/ipecs-mobile/images/user1.png'),
-                              ),
-                              title: Text(
-                                'Name',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xff1f375b),
-                                  decoration: TextDecoration.none,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: 5),
-                                  Text(
-                                    'Room-1',
-                                    style: TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    'Gmail',
-                                    style: TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                  SizedBox(height: 5),
-                                  Text(
-                                    'Tenant',
-                                    style: TextStyle(
-                                      fontFamily: 'Urbanist',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xff9ba7b1),
-                                      decoration: TextDecoration.none,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.check, color: Colors.green),
-                                    onPressed: null, // Set to null
+                      // ListView for Users
+                      StatefulBuilder(
+                        builder: (BuildContext context, StateSetter setState) {
+                          print('Building ListView. User Data Count: ${userData.length}');
+                          return ListView(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            children: userData.map((user) {
 
+                              return Card(
+                                elevation: 3,
+                                child: ListTile(
+                                  leading: const CircleAvatar(
+                                    backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                                   ),
-                                  SizedBox(width: 10),
-                                  IconButton(
-                                    icon: Icon(Icons.close, color: Colors.red),
-                                    onPressed: null, // Set to null
+                                  title: Text(
+                                    '${user['username']}',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xff1f375b),
+                                      decoration: TextDecoration.none,
+                                    ),
                                   ),
-                                  IconButton(
-                                    icon: Icon(Icons.edit, color: Colors.red),
-                                    onPressed: null, // Set to null
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(height: 5),
+                                      Text(
+                                        '${user['roomNum']}',
+                                        style: TextStyle(
+                                          fontFamily: 'Urbanist',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xff9ba7b1),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${user['email']}',
+                                        style: TextStyle(
+                                          fontFamily: 'Urbanist',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xff9ba7b1),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${user['contactNum']}',
+                                        style: TextStyle(
+                                          fontFamily: 'Urbanist',
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xff9ba7b1),
+                                          decoration: TextDecoration.none,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 15),
-                          // Add more ListTiles as needed
-                        ],
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // userStatus icon
+                                      IconButton(
+                                        icon: Icon(Icons.check, color: Colors.green),
+                                        onPressed: null,
+                                      ),
+                                      SizedBox(width: 10),
+                                      IconButton(
+                                        icon: Icon(Icons.edit, color: Colors.red),
+                                        onPressed: null,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -200,7 +224,6 @@ class _ManageUserState extends State<ManageUser> {
           ),
         ),
       ),
-      // Add a FloatingActionButton
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
@@ -209,10 +232,10 @@ class _ManageUserState extends State<ManageUser> {
             ),
           );
         },
-        backgroundColor: const Color(0xff1f375b), // Set the background color
+        backgroundColor: const Color(0xff1f375b),
         child: const Icon(
           Icons.person,
-          color: Color(0xffdfb153), // Set the desired color
+          color: Color(0xffdfb153),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
+import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:iPECS/utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -288,6 +289,17 @@ class _PaymentHistoryState extends State<PaymentHistory> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const NewPayment(),
+            ),
+          );
+        },
+        child: Icon(Icons.payment),
+        backgroundColor: Color(0xffdfb153),
       ),
     );
   }

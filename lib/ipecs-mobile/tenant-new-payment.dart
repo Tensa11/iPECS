@@ -3,9 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iPECS/ipecs-mobile/tenant-dashboard.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
+import 'package:iPECS/ipecs-mobile/tenant-payments-history.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -36,7 +37,7 @@ class _NewPaymentState extends State<NewPayment> {
   // Function to save the image to Firebase Storage
   Future<void> saveImageToFirebaseStorage() async {
     if (imagePath != null) {
-      final String referenceNumber = referenceController.text;
+      final String referenceNumber = 'Ref-${referenceController.text.padLeft(9, '0')}'; // Format reference number as 'Ref-123456789'
       final Reference storageReference = FirebaseStorage.instance
           .ref()
           .child('PaymentProof/$referenceNumber.png'); // Use .png as the format
@@ -49,10 +50,12 @@ class _NewPaymentState extends State<NewPayment> {
     }
   }
 
+  final referenceNumberFormatter = FilteringTextInputFormatter.allow(RegExp(r'\d{0,9}'));
+
   // Updated submitPayment function to include image upload
   void submitPayment() async {
     if (imagePath != null) {
-      final String referenceNumber = referenceController.text;
+      final String referenceNumber = 'Ref-${referenceController.text.padLeft(9, '0')}'; // Format reference number as 'Ref-123456789'
       final String currentDate = DateFormat('MM-dd-yyyy').format(DateTime.now());
       final String userName = paidByController.text;
 
@@ -74,7 +77,7 @@ class _NewPaymentState extends State<NewPayment> {
         // Navigate to another page here
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const TenantDashboard(), // Replace 'AnotherPage' with the page you want to navigate to
+            builder: (context) => const PaymentHistory(), // Replace 'AnotherPage' with the page you want to navigate to
           ),
         );
       }).catchError((error) {
@@ -110,6 +113,8 @@ class _NewPaymentState extends State<NewPayment> {
       print("Error fetching available room numbers: $error");
     });
   }
+
+  // Input formatter to restrict the reference number to 9-digit numbers
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +226,10 @@ class _NewPaymentState extends State<NewPayment> {
                   ),
                   child: TextField(
                     controller: referenceController, // Use the referenceController to capture user input
+                    inputFormatters: [referenceNumberFormatter], // Set input formatter for the reference number
+                    maxLength: 9,
                     decoration: InputDecoration(
+                      counterText: '',
                       border: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       enabledBorder: InputBorder.none,

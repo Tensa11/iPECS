@@ -60,16 +60,17 @@ class _TenantDashboardState extends State<TenantDashboard> {
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
 
     // Start the timer
-    _timer = Timer.periodic(Duration(seconds: 20), (Timer timer) {
+    _timer = Timer.periodic(Duration(minutes: 10), (Timer timer) {
       // Check if the credit is critical
       for (var room in roomData) {
-        bool isCreditCritical = room['creditcriticallevel'] > room['currentcredit'];
+        bool isCreditCritical = room['creditcriticallevel'] > (room['currentcredit'] ?? 0).toDouble();
         if (isCreditCritical) {
           showNotification(room['name'], (room['currentcredit'] ?? 0).toDouble()); // Convert to double here
         }
       }
     });
   }
+
 
   Future<void> getRooms() async {
     currentUser = auth.currentUser;

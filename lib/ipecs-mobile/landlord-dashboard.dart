@@ -16,8 +16,6 @@ class LandlordDashboard extends StatefulWidget {
 }
 
 class _LandlordDashboardState extends State<LandlordDashboard> {
-  final DatabaseReference _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");
-  final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
   final auth = FirebaseAuth.instance;
   User? currentUser;
   List<Map<String, dynamic>> roomData = [];
@@ -31,9 +29,10 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
     getPayments();
   }
 
-  final DatabaseReference _usersRef = FirebaseDatabase.instance.reference().child("Users");
 
   Future<void> getRooms() async {
+    final DatabaseReference _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");
+    final DatabaseReference _usersRef = FirebaseDatabase.instance.reference().child("Users");
     DataSnapshot snapshot = await _roomsRef.get();
     DataSnapshot userSnapshot = await _usersRef.get();
     if (snapshot.value is Map && userSnapshot.value is Map) {
@@ -56,6 +55,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
   }
 
   Future<void> getPayments() async {
+    final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
     currentUser = auth.currentUser;
     if (currentUser != null) {
       print("USER ID: ${currentUser?.uid}");
@@ -91,8 +91,6 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
       print("No User");
     }
   }
-
-
 
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
