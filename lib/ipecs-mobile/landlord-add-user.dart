@@ -31,6 +31,7 @@ class _AddUserState extends State<AddUser> {
   String selectedRoomNumber = ""; // Set the initial selection to an empty string
 
   // Function to create a new Tenant user
+  // Function to create a new Tenant user
   Future<void> createUser(String email, String password) async {
     try {
       final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
@@ -52,13 +53,14 @@ class _AddUserState extends State<AddUser> {
           'UserID': user.uid,
         };
         await _database.child('Users').child(user.uid).set(userData);
-        await _database.child('Rooms').child(selectedRoomNumber).set(roomData);
+        await _database.child('Rooms').child(selectedRoomNumber).update(roomData); // Use update() instead of set()
 
       }
     } catch (error) {
       print('Error creating user: $error');
     }
   }
+
 
   @override
   void initState() {
@@ -67,6 +69,7 @@ class _AddUserState extends State<AddUser> {
   }
 
   // Fetch available room numbers from Firebase
+  // Fetch available room numbers from Firebase and sort them
   void fetchAvailableRooms() {
     final DatabaseReference _roomsReference = FirebaseDatabase.instance.reference().child("Rooms");
 
@@ -75,9 +78,13 @@ class _AddUserState extends State<AddUser> {
       if (data is Map) {
         final availableRooms = data.keys.toList().cast<String>(); // Convert to List<String>
 
+        // Sort room numbers before updating state
+        availableRooms.sort((a, b) => a.compareTo(b));
+
         setState(() {
           roomNumbers = availableRooms;
-          if (availableRooms.isNotEmpty) {
+          if (!roomNumbers.contains(selectedRoomNumber) && availableRooms.isNotEmpty) {
+            // Update the selected room number only if it is not in the updated room list
             selectedRoomNumber = availableRooms[0];
           }
         });
@@ -86,6 +93,8 @@ class _AddUserState extends State<AddUser> {
       print("Error fetching available room numbers: $error");
     });
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -243,8 +252,10 @@ class _AddUserState extends State<AddUser> {
                       color: const Color(0xfff7f7f8),
                     ),
                     child: TextField(
+                      maxLength: 11,
                       controller: _phoneNumberController,
                       decoration: InputDecoration(
+                        counterText: '',
                         border: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         enabledBorder: InputBorder.none,
