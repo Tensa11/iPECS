@@ -31,7 +31,6 @@ class _AddUserState extends State<AddUser> {
   String selectedRoomNumber = ""; // Set the initial selection to an empty string
 
   // Function to create a new Tenant user
-  // Function to create a new Tenant user
   Future<void> createUser(String email, String password) async {
     try {
       final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
@@ -40,27 +39,33 @@ class _AddUserState extends State<AddUser> {
       );
       final User? user = userCredential.user;
       if (user != null) {
-        // Successfully created user, save user data in the Realtime Database
         final userData = {
           'contactNum': _phoneNumberController.text,
           'email': email,
-          'userRole': 'Tenant',
+          'userRole': selectedUserRole,
           'userStatus': true,
           'username': _userNameController.text,
-          'RoomNum': selectedRoomNumber,
         };
-        final roomData = {
-          'UserID': user.uid,
-        };
-        await _database.child('Users').child(user.uid).set(userData);
-        await _database.child('Rooms').child(selectedRoomNumber).update(roomData); // Use update() instead of set()
 
+        if (selectedRoomNumber != 'None') {
+          userData['RoomNum'] = selectedRoomNumber;
+          final roomData = {
+            'UserID': user.uid,
+          };
+          await _database.child('Users').child(user.uid).set(userData);
+          await _database.child('Rooms').child(selectedRoomNumber).update(roomData);
+        } else {
+          // If 'None' is selected, do not save RoomNum in Users and skip updating Rooms
+          await _database.child('Users').child(user.uid).set(userData);
+        }
       }
     } catch (error) {
       print('Error creating user: $error');
     }
   }
 
+  List<String> userRoles = ['Tenant', 'Landlord']; // Add available user roles
+  String selectedUserRole = 'Tenant'; // Set initial selection to 'Tenant'
 
   @override
   void initState() {
@@ -69,7 +74,6 @@ class _AddUserState extends State<AddUser> {
   }
 
   // Fetch available room numbers from Firebase
-  // Fetch available room numbers from Firebase and sort them
   void fetchAvailableRooms() {
     final DatabaseReference _roomsReference = FirebaseDatabase.instance.reference().child("Rooms");
 
@@ -93,8 +97,6 @@ class _AddUserState extends State<AddUser> {
       print("Error fetching available room numbers: $error");
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -223,13 +225,48 @@ class _AddUserState extends State<AddUser> {
                       color: const Color(0xfff7f7f8),
                     ),
                     child: DropdownButtonFormField<String>(
-                      value: selectedRoomNumber,
-                      items: roomNumbers.map((String room) {
+                      value: selectedUserRole,
+                      items: userRoles.map((String role) {
                         return DropdownMenuItem<String>(
-                          value: room,
-                          child: Text(room),
+                          value: role,
+                          child: Text(role),
                         );
                       }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedUserRole = newValue!;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
+                        hintText: 'User Role',
+                        hintStyle: const TextStyle(color: Color(0xff8390a1)),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 15 * sizeAxis),
+                    width: 331 * sizeAxis,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8 * sizeAxis),
+                      border: Border.all(color: const Color(0xffe8ecf4)),
+                      color: const Color(0xfff7f7f8),
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: selectedRoomNumber,
+                      items: [
+                        DropdownMenuItem<String>(
+                          value: 'None',
+                          child: Text('None'),
+                        ),
+                        ...roomNumbers.map((String room) {
+                          return DropdownMenuItem<String>(
+                            value: room,
+                            child: Text(room),
+                          );
+                        }).toList(),
+                      ],
                       onChanged: (String? newValue) {
                         setState(() {
                           selectedRoomNumber = newValue!;
@@ -324,6 +361,14 @@ class _AddUserState extends State<AddUser> {
                     margin: EdgeInsets.fromLTRB(37 * sizeAxis, 0 * sizeAxis, 38 * sizeAxis, 0 * sizeAxis),
                     child: TextButton(
                       onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (context){
+                              return Center(child: CircularProgressIndicator(
+                                color: Color(0xffdfb153),
+                              ));
+                            }
+                        );
                         createUser(_emailController.text, _passwordController.text);// Call the createUser function on button press
                         Navigator.of(context).pop();
                       },

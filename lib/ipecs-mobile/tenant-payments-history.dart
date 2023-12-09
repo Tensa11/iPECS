@@ -7,6 +7,7 @@ import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:iPECS/utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
 
 class PaymentHistory extends StatefulWidget {
   const PaymentHistory({Key? key}) : super(key: key);
@@ -54,6 +55,13 @@ class _PaymentHistoryState extends State<PaymentHistory> {
               'roomNum': payment['RoomNum'],
             };
           }).toList();
+          // Sort paymentData by date in descending order
+          paymentData.sort((a, b) {
+            var format = DateFormat("MM-dd-yyyy");
+            var dateA = format.parse(a['date']);
+            var dateB = format.parse(b['date']);
+            return dateB.compareTo(dateA);
+          });
           setState(() {});
         } else {
           print("Data is not in the expected format");
@@ -81,12 +89,12 @@ class _PaymentHistoryState extends State<PaymentHistory> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   void showImageDialog(String imageName) async {
+
     final String imagePath = 'PaymentProof/$imageName.png'; // Update with your folder path
 
     try {
       final ref = _storage.ref().child(imagePath);
       final String imageUrl = await ref.getDownloadURL();
-
       showDialog(
         context: context,
         builder: (context) {

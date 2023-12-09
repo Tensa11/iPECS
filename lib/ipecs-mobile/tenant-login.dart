@@ -20,6 +20,14 @@ class _TenantLoginState extends State<TenantLogin> {
   String _errorMessage = '';
 
   void _signIn() async {
+    showDialog(
+      context: context,
+      builder: (context){
+        return Center(child: CircularProgressIndicator(
+          color: Color(0xffdfb153),
+        ));
+      }
+    );
     try {
       final loginUser = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailTextController.text,

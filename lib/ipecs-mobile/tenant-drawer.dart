@@ -100,31 +100,13 @@ class _TenantDrawerState extends State<TenantDrawer> {
                   ),
                 );              },
             ),
-            ListTile(
-              leading: const Icon(
-                Icons.house,
-                color: Colors.white, // Set the icon color to white
-              ),
-              title: const Text(
-                'Rooms',
-                style: TextStyle(
-                  color: Colors.white,
-                ),
-              ),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const TenantRooms(),
-                  ),
-                );              },
-            ),
             // ListTile(
             //   leading: const Icon(
-            //     Icons.payment,
+            //     Icons.house,
             //     color: Colors.white, // Set the icon color to white
             //   ),
             //   title: const Text(
-            //     'Payment',
+            //     'Rooms',
             //     style: TextStyle(
             //       color: Colors.white,
             //     ),
@@ -132,13 +114,31 @@ class _TenantDrawerState extends State<TenantDrawer> {
             //   onTap: () {
             //     Navigator.of(context).push(
             //       MaterialPageRoute(
-            //         builder: (context) => const NewPayment(),
+            //         builder: (context) => const TenantRooms(),
             //       ),
             //     );              },
             // ),
             ListTile(
               leading: const Icon(
                 Icons.payment,
+                color: Colors.white, // Set the icon color to white
+              ),
+              title: const Text(
+                'New Payment',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const NewPayment(),
+                  ),
+                );              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.payments,
                 color: Colors.white, // Set the icon color to white
               ),
               title: const Text(

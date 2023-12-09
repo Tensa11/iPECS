@@ -7,7 +7,6 @@ import 'package:iPECS/utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-
 class PaymentManage extends StatefulWidget {
   const PaymentManage({Key? key}) : super(key: key);
 
@@ -21,11 +20,13 @@ class _PaymentManageState extends State<PaymentManage> {
   final auth = FirebaseAuth.instance;
   User? currentUser;
   List<Map<String, dynamic>> paymentData = [];
+  List<Map<String, dynamic>> roomData = [];
 
   @override
   void initState() {
     super.initState();
     getPayments();
+    getRooms();
   }
 
   Future<void> getPayments() async {
@@ -56,25 +57,78 @@ class _PaymentManageState extends State<PaymentManage> {
     }
   }
 
+  // Inside the class _PaymentManageState
+
+  Future<void> getRooms() async {
+    final DatabaseReference _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");
+    final DatabaseReference _usersRef = FirebaseDatabase.instance.reference().child("Users");
+    DataSnapshot snapshot = await _roomsRef.get();
+    DataSnapshot userSnapshot = await _usersRef.get();
+    if (snapshot.value != null && userSnapshot.value != null) {
+      Map<dynamic, dynamic> roomValues = snapshot.value as Map<dynamic, dynamic>;
+      Map<dynamic, dynamic> userValues = userSnapshot.value as Map<dynamic, dynamic>;
+      roomData.clear(); // Clear the roomData list before adding new data
+      roomValues.forEach((key, value) {
+        String tenantName = userValues[value['UserID']]['username'] ?? 'No Name';
+        roomData.add({
+          'name': key,
+          'currentcredit': value['CurrentCredit'],
+          'creditcriticallevel': value['CreditCriticalLevel'],
+          'electricityprice': value['ElectricityPrice'],
+          'userid': value['UserID'],
+          'tenantName': tenantName
+        });
+      });
+      roomData.sort((a, b) => a['name'].compareTo(b['name']));
+      setState(() {});
+    }
+  }
+
   void handleCheckButtonPress(Map<String, dynamic> payment) {
-    // Use the same reference number from PaymentManage
     String refNumber = payment['ref'];
+    String roomNum = payment['roomNum'];
+    int paymentAmount = payment['paymentAmount'] as int; // Parse paymentAmount to int
 
-    // Copy data from PaymentManage to PaymentRecord and set PaymentStatus to true
-    _paymentRecordReference.child(refNumber).set({
-      'Date': payment['date'],
-      'PaidBy': payment['paidBy'],
-      'PaymentAmount': payment['paymentAmount'],
-      'ProofImage': payment['proofImage'],
-      'RoomNum': payment['roomNum'],
-      'PaymentStatus': true,
+    DatabaseReference roomRef = FirebaseDatabase.instance.reference().child("Rooms").child(roomNum);
+
+    roomRef.once().then((DatabaseEvent event) {
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.value != null) {
+        Map<dynamic, dynamic> roomData = snapshot.value as Map<dynamic, dynamic>;
+        int currentCredit = roomData['CurrentCredit'] ?? 0;
+        int newCredit = currentCredit + paymentAmount;
+
+        roomRef.update({'CurrentCredit': newCredit}).then((_) {
+          // Copy data from PaymentManage to PaymentRecord and set PaymentStatus to true
+          _paymentRecordReference.child(refNumber).set({
+            'Date': payment['date'],
+            'PaidBy': payment['paidBy'],
+            'PaymentAmount': paymentAmount, // Save paymentAmount as int
+            'ProofImage': payment['proofImage'],
+            'RoomNum': payment['roomNum'],
+            'PaymentStatus': true,
+          }).then((_) {
+            // Remove the payment record from PaymentManage
+            _paymentManageReference.child(refNumber).remove().then((_) {
+              // Remove the payment record from paymentData list
+              setState(() {
+                paymentData.removeWhere((element) => element['ref'] == refNumber);
+              });
+            }).catchError((error) {
+              print("Failed to remove payment record: $error");
+            });
+          }).catchError((error) {
+            print("Failed to copy data to PaymentRecord: $error");
+          });
+        }).catchError((error) {
+          print("Failed to update CurrentCredit in the Room: $error");
+        });
+      } else {
+        print("Room $roomNum not found");
+      }
+    }).catchError((error) {
+      print("Error retrieving room data: $error");
     });
-
-    // Remove the payment record from PaymentManage
-    _paymentManageReference.child(refNumber).remove();
-
-    // Refresh the payment data
-    getPayments();
   }
 
   void handleCloseButtonPress(Map<String, dynamic> payment) {
@@ -98,12 +152,10 @@ class _PaymentManageState extends State<PaymentManage> {
     getPayments();
   }
 
-
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   void showImageDialog(String imageName) async {
     final String imagePath = 'PaymentProof/$imageName.png'; // Update with your folder path
-
     try {
       final ref = _storage.ref().child(imagePath);
       final String imageUrl = await ref.getDownloadURL();

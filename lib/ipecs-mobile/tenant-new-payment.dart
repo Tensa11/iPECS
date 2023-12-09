@@ -24,6 +24,7 @@ class _NewPaymentState extends State<NewPayment> {
   double sizeAxis = 1.0;
   double size = 1.0;
 
+
   List<String> roomNumbers = []; // Update to an empty list
   String selectedRoomNumber = ""; // Set the initial selection to an empty string
   XFile? imagePath; // Store the path to the uploaded image
@@ -54,34 +55,40 @@ class _NewPaymentState extends State<NewPayment> {
 
   // Updated submitPayment function to include image upload
   void submitPayment() async {
+    showDialog(
+        context: context,
+        builder: (context){
+          return Center(child: CircularProgressIndicator(
+            color: Color(0xffdfb153),
+          ));
+        }
+    );
     if (imagePath != null) {
-      final String referenceNumber = 'Ref-${referenceController.text.padLeft(9, '0')}'; // Format reference number as 'Ref-123456789'
+      final String referenceNumber = 'Ref-${referenceController.text.padLeft(9, '0')}';
       final String currentDate = DateFormat('MM-dd-yyyy').format(DateTime.now());
       final String userName = paidByController.text;
 
-      // Save the image to Firebase Storage
       await saveImageToFirebaseStorage();
+
+      final NumberFormat formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
+      final double paymentAmount = double.parse(amountController.text); // Convert entered amount to a double
 
       final Map<String, dynamic> paymentData = {
         'Date': currentDate,
         'PaidBy': userName,
-        'PaymentAmount': amountController.text,
-        'ProofImage': 'PaymentProof/$referenceNumber.png', // Update with the correct path in Storage
+        'PaymentAmount': paymentAmount, // Store the payment amount as a number
+        'ProofImage': 'PaymentProof/$referenceNumber.png',
         'RoomNum': selectedRoomNumber,
       };
 
       _database.child('PaymentManage').child(referenceNumber).set(paymentData).then((_) {
-        // Data saved successfully
         print('Payment data saved to Firebase: $paymentData');
-
-        // Navigate to another page here
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => const PaymentHistory(), // Replace 'AnotherPage' with the page you want to navigate to
+            builder: (context) => const PaymentHistory(),
           ),
         );
       }).catchError((error) {
-        // Handle any errors that occur during the process
         print('Error saving payment data: $error');
       });
     }
@@ -102,9 +109,13 @@ class _NewPaymentState extends State<NewPayment> {
       if (data is Map) {
         final availableRooms = data.keys.toList().cast<String>(); // Convert to List<String>
 
+        // Sort room numbers before updating state
+        availableRooms.sort((a, b) => a.compareTo(b));
+
         setState(() {
           roomNumbers = availableRooms;
-          if (availableRooms.isNotEmpty) {
+          if (!roomNumbers.contains(selectedRoomNumber) && availableRooms.isNotEmpty) {
+            // Update the selected room number only if it is not in the updated room list
             selectedRoomNumber = availableRooms[0];
           }
         });
@@ -113,8 +124,6 @@ class _NewPaymentState extends State<NewPayment> {
       print("Error fetching available room numbers: $error");
     });
   }
-
-  // Input formatter to restrict the reference number to 9-digit numbers
 
   @override
   Widget build(BuildContext context) {

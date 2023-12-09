@@ -54,7 +54,7 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
                 } else {
                   return UserAccountsDrawerHeader(
                     accountName: Text(
-                      snapshot.data?['userName'] ?? 'Username',
+                      snapshot.data?['username'] ?? 'Username',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
