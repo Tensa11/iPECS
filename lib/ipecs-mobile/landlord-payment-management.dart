@@ -95,8 +95,8 @@ class _PaymentManageState extends State<PaymentManage> {
       DataSnapshot snapshot = event.snapshot;
       if (snapshot.value != null) {
         Map<dynamic, dynamic> roomData = snapshot.value as Map<dynamic, dynamic>;
-        int currentCredit = roomData['CurrentCredit'] ?? 0;
-        int newCredit = currentCredit + paymentAmount;
+        double currentCredit = roomData['CurrentCredit'] ?? 0;
+        double newCredit = currentCredit + paymentAmount;
 
         roomRef.update({'CurrentCredit': newCredit}).then((_) {
           // Copy data from PaymentManage to PaymentRecord and set PaymentStatus to true
@@ -130,6 +130,7 @@ class _PaymentManageState extends State<PaymentManage> {
       print("Error retrieving room data: $error");
     });
   }
+
 
   void handleCloseButtonPress(Map<String, dynamic> payment) {
     // Use the same reference number from PaymentManage
