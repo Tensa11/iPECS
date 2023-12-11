@@ -258,7 +258,19 @@ class _LandlordProfileState extends State<LandlordProfile> {
             child: TextButton(
               onPressed: () async {
                 try {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false, // Set to false to prevent dialog dismissal on tap outside
+                    builder: (context) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xffdfb153),
+                        ),
+                      );
+                    },
+                  );
                   await FirebaseAuth.instance.signOut();
+                  await Future.delayed(Duration(seconds: 1));
                   Navigator.of(context).pushReplacement(  // Use pushReplacement to prevent going back to the previous screen
                     MaterialPageRoute(
                       builder: (context) => const LandlordLogin(),

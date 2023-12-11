@@ -32,7 +32,7 @@ var androidPlatformChannelSpecifics = AndroidNotificationDetails(
     showWhen: false);
 var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 await flutterLocalNotificationsPlugin.show(
-    0,
+    10,
     'iPECS: Daily Credit Alert',
     'Your Credit ₱${currentCredit.toStringAsFixed(2)} in $roomName is at critical, add new credit to avoid disconnection',
     platformChannelSpecifics,
@@ -64,7 +64,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
 
     // Start the timer
-    _timer = Timer.periodic(Duration(minutes: 10), (Timer timer) {
+    _timer = Timer.periodic(Duration(minutes: 1), (Timer timer) {
       // Check if the credit is critical
       for (var room in roomData) {
         bool isCreditCritical = room['creditcriticallevel'] > (room['currentcredit'] ?? 0).toDouble();
@@ -75,6 +75,12 @@ class _TenantDashboardState extends State<TenantDashboard> {
     });
   }
 
+  @override
+  void dispose() {
+    // Dispose of the timer when the widget is disposed
+    _timer?.cancel();
+    super.dispose();
+  }
   Future<void> getRooms() async {
     currentUser = auth.currentUser;
     if (currentUser != null) {
@@ -125,7 +131,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
     var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
     await flutterLocalNotificationsPlugin.show(
-      0,
+      10,
       'iPECS: Daily Credit Alert',
       'Your Credit ₱${currentCredit.toStringAsFixed(2)} in $roomName is at critical, add new credit to avoid disconnection',
       platformChannelSpecifics,
@@ -292,7 +298,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                               borderRadius: BorderRadius.circular(24 * sizeAxis),
                               image: const DecorationImage(
                                 fit: BoxFit.cover,
-                                image: AssetImage('assets/ipecs-mobile/images/user1.png'),
+                                image: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
                             ),
                           ),

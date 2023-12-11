@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
   List<Map<String, dynamic>> roomData = [];
   List<Map<String, dynamic>> paymentData = [];
 
+  Timer? _timer;
 
   @override
   void initState() {
@@ -29,6 +31,12 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
     getPayments();
   }
 
+  @override
+  void dispose() {
+    // Dispose of the timer when the widget is disposed
+    _timer?.cancel();
+    super.dispose();
+  }
 
   Future<void> getRooms() async {
     final DatabaseReference _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");

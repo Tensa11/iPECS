@@ -272,12 +272,29 @@ class _TenantProfileState extends State<TenantProfile> {
           Container(
             margin: EdgeInsets.fromLTRB(38 * sizeAxis, 30 * sizeAxis, 38 * sizeAxis, 0 * sizeAxis),
             child: TextButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const TenantLogin(),
-                  ),
-                );
+              onPressed: () async {
+                try {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false, // Set to false to prevent dialog dismissal on tap outside
+                    builder: (context) {
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xffdfb153),
+                        ),
+                      );
+                    },
+                  );
+                  await FirebaseAuth.instance.signOut();
+                  await Future.delayed(Duration(seconds: 1));
+                  Navigator.of(context).pushReplacement(  // Use pushReplacement to prevent going back to the previous screen
+                    MaterialPageRoute(
+                      builder: (context) => const TenantLogin(),
+                    ),
+                  );
+                } catch (e) {
+                  print('Error logging out: $e');
+                }
               },
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
@@ -367,7 +384,7 @@ class _TenantProfileState extends State<TenantProfile> {
                               textAlign: TextAlign.center,
                             ),
                             Text(
-                              'Total\n Rooms', //Show all Rooms Owned by the user
+                              'Total Owned\n  Rooms', //Show all Rooms Owned by the user
                               style: TextStyle(fontSize: 13),
                               textAlign: TextAlign.center,
                             ),
@@ -453,7 +470,7 @@ class _TenantProfileState extends State<TenantProfile> {
     backgroundColor: Colors.white,
     child: const ClipOval(
       child: Image(
-        image: AssetImage('assets/ipecs-mobile/images/user1.png'),
+        image: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
         fit: BoxFit.cover,
         width: 130,
         height: 130,

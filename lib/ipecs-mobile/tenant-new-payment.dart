@@ -294,7 +294,7 @@ class _NewPaymentState extends State<NewPayment> {
                               image: const DecorationImage(
                                 fit: BoxFit.cover,
                                 image: AssetImage(
-                                  'assets/ipecs-mobile/images/user1.png',
+                                  'assets/ipecs-mobile/images/userCartoon.png',
                                 ),
                               ),
                             ),

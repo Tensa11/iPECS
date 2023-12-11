@@ -16,30 +16,29 @@ class ManageUser extends StatefulWidget {
 
 class _ManageUserState extends State<ManageUser> {
   final user = FirebaseAuth.instance.currentUser!;
+  late DatabaseReference _usersRef;
   List<Map<String, dynamic>> userData = [];
 
   @override
   void initState() {
     super.initState();
+    _usersRef = FirebaseDatabase.instance.reference().child("Users");
     getUsers();
   }
 
   Future<void> getUsers() async {
-    final DatabaseReference _usersRef = FirebaseDatabase.instance.reference().child("Users");
     DataSnapshot snapshot = await _usersRef.get();
     if (snapshot.value is Map) {
       Map<dynamic, dynamic> userValues = Map<dynamic, dynamic>.from(snapshot.value! as Map);
       userValues.forEach((key, value) {
         userData.add({
           'id': key,
-          'roomNum': value['RoomNum'],
           'username': value['username'],
           'email': value['email'],
           'contactNum': value['contactNum'],
           'userStatus': value['userStatus'],
         });
       });
-      userData.sort((a, b) => a['roomNum'].compareTo(b['roomNum']));
       setState(() {});
     }
   }
@@ -163,16 +162,6 @@ class _ManageUserState extends State<ManageUser> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       SizedBox(height: 5),
-                                      Text(
-                                        '${user['roomNum']}',
-                                        style: TextStyle(
-                                          fontFamily: 'Urbanist',
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: const Color(0xff9ba7b1),
-                                          decoration: TextDecoration.none,
-                                        ),
-                                      ),
                                       Text(
                                         '${user['email']}',
                                         style: TextStyle(

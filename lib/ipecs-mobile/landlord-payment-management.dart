@@ -1,12 +1,41 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-manual-payment.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+Future<void> _firebaseBackgroundMessageHandler(RemoteMessage message) async {await Firebase.initializeApp();
+print("Handling a background message: ${message.messageId}");
+
+// Show a local notification
+var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'channelId',
+    'channelName',
+    channelDescription: 'channelDescription',
+    importance: Importance.max,
+    priority: Priority.high,
+    showWhen: false
+);
+
+var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+await flutterLocalNotificationsPlugin.show(
+    10,
+    'iPECS: New Payment from Tenants!',
+    'A Tenant is requesting for a Payment Confirmation!',
+    platformChannelSpecifics,
+    payload: 'item x'
+  );
+}
 
 class PaymentManage extends StatefulWidget {
   const PaymentManage({Key? key}) : super(key: key);
@@ -20,14 +49,58 @@ class _PaymentManageState extends State<PaymentManage> {
   final DatabaseReference _paymentRecordReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
   final auth = FirebaseAuth.instance;
   User? currentUser;
-  List<Map<String, dynamic>> paymentData = [];
+  List<Map<String, dynamic>> newPaymentData = [];
   List<Map<String, dynamic>> roomData = [];
+
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     getPayments();
     getRooms();
+    var initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
+
+    // Start a timer that triggers the notification every 2 minutes
+    const Duration duration = Duration(minutes: 1);
+    _timer = Timer.periodic(duration, (Timer timer) {
+      if (mounted) {
+        // Check if the widget is still mounted before triggering the notification
+        if (newPaymentData.isNotEmpty) {
+          showNotification();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the timer when the widget is disposed
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> showNotification() async {
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+      'channelId',
+      'channelName',
+      channelDescription: 'channelDescription',
+      importance: Importance.max,
+      priority: Priority.high,
+      showWhen: false,
+    );
+    var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await flutterLocalNotificationsPlugin.show(
+      10,
+      'iPECS: New Payment from Tenants!',
+      'A Tenant is requesting for a Payment Confirmation!',
+      platformChannelSpecifics,
+      payload: 'item x',
+    );
   }
 
   Future<void> getPayments() async {
@@ -37,7 +110,7 @@ class _PaymentManageState extends State<PaymentManage> {
       _paymentManageReference.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
-          paymentData = data.entries.map<Map<String, dynamic>>((entry) {
+          newPaymentData = data.entries.map<Map<String, dynamic>>((entry) {
             final payment = entry.value;
             return {
               'ref': entry.key,
@@ -48,7 +121,13 @@ class _PaymentManageState extends State<PaymentManage> {
               'roomNum': payment['RoomNum'],
             };
           }).toList();
-          setState(() {});
+          setState(() {
+            // Set state when new payment data arrives
+            // Here you can call showNotification method
+            if (newPaymentData.isNotEmpty) {
+              showNotification();
+            }
+          });
         } else {
           print("Data is not in the expected format");
         }
@@ -57,6 +136,7 @@ class _PaymentManageState extends State<PaymentManage> {
       print("No User");
     }
   }
+
 
   // Inside the class _PaymentManageState
 
@@ -164,7 +244,7 @@ class _PaymentManageState extends State<PaymentManage> {
             _paymentManageReference.child(refNumber).remove().then((_) {
               // Remove the payment record from paymentData list
               setState(() {
-                paymentData.removeWhere((element) => element['ref'] == refNumber);
+                newPaymentData.removeWhere((element) => element['ref'] == refNumber);
               });
             }).catchError((error) {
               print("Failed to remove payment record: $error");
@@ -386,7 +466,7 @@ class _PaymentManageState extends State<PaymentManage> {
                       ListView(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        children: paymentData.map((payment) {
+                        children: newPaymentData.map((payment) {
                           return Card(
                             elevation: 3,
                             child: ListTile(

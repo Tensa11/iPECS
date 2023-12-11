@@ -181,7 +181,7 @@ class _PaymentHistoryState extends State<PaymentHistory> {
                               borderRadius: BorderRadius.circular(24 * sizeAxis),
                               image: const DecorationImage(
                                 fit: BoxFit.cover,
-                                image: AssetImage('assets/ipecs-mobile/images/user1.png'),
+                                image: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
                             ),
                           ),
