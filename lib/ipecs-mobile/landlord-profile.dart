@@ -33,6 +33,7 @@ class _LandlordProfileState extends State<LandlordProfile> {
     super.initState();
     getPayments();
   }
+
   Future<void> getPayments() async {
     final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
     currentUser = auth.currentUser;
@@ -116,11 +117,38 @@ class _LandlordProfileState extends State<LandlordProfile> {
     showImageDialog(imageName);
   }
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.reference().child('Users');
+
+  Future<Map<String, dynamic>> getUserData() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      DatabaseEvent event = await _dbRef.child(user.uid).once();
+      if (event.snapshot.value != null) {
+        if (event.snapshot.value is Map) {
+          return Map<String, dynamic>.from(event.snapshot.value as Map);
+        }
+      }
+    }
+    return {};
+  }
+
+  final DatabaseReference _roomsDataReference = FirebaseDatabase.instance.ref().child("Rooms");
+
+  Future<List<dynamic>> getAllRooms() async {
+    List<dynamic> roomNumbers = [];
+    final roomSnapshot = await _roomsDataReference.once();
+    final roomData = roomSnapshot.snapshot.value as Map<dynamic, dynamic>?;
+    if (roomData != null && roomData.isNotEmpty) {
+      roomNumbers = roomData.keys.toList();
+    }
+    return roomNumbers;
+  }
+
   @override
   Widget build(BuildContext context) {
     sizeAxis = MediaQuery.of(context).size.width / baseWidth;
     size = sizeAxis * 0.97;
-
     return Scaffold(
       body: ListView(
         padding: EdgeInsets.zero,
@@ -276,58 +304,78 @@ class _LandlordProfileState extends State<LandlordProfile> {
     );
   }
 
-  Widget buildContent() => const Column(
-    children: [
-      SizedBox(height: 30),
-      Text(
-        'Tony To',
-        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-      ),
-      SizedBox(height: 5),
-      Text(
-        'Landlord',
-        style: TextStyle(fontSize: 20, color: Colors.black),
-      ),
-      Divider(),
-      SizedBox(height: 16),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Column(
+  Widget buildContent() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: getUserData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator(); // Show a loader while data is fetched
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Text('No user data available');
+        } else {
+          final userData = snapshot.data!;
+          final username = userData['username'];
+          final userRole = userData['userRole'];
+          final userId = userData['userId']; // Assuming you have a 'userId' field in your user data structure
+
+          return Column(
             children: [
+              SizedBox(height: 30),
               Text(
-                '₱2000', // Replace with the actual value
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xff23426f)),
-                textAlign: TextAlign.center,
+                username ?? 'Username',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
               ),
+              SizedBox(height: 5),
               Text(
-                'Payment\nReceived',
-                style: TextStyle(fontSize: 13),
-                textAlign: TextAlign.center,
+                userRole ?? 'Role',
+                style: TextStyle(fontSize: 20, color: Colors.black),
               ),
+              Divider(),
+              SizedBox(height: 16),
+              FutureBuilder<List<dynamic>>(
+                future: getAllRooms(), // Fetch all rooms
+                builder: (context, roomSnapshot) {
+                  if (roomSnapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // Show a loader while room data is fetched
+                  } else if (roomSnapshot.hasError) {
+                    return Text('Error fetching room data: ${roomSnapshot.error}');
+                  } else {
+                    final roomNumbers = roomSnapshot.data ?? [];
+                    final totalRooms = roomNumbers.length;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              '$totalRooms',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xff23426f)),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              'Total\n Rooms', // Show total rooms available
+                              style: TextStyle(fontSize: 13),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+                },
+              ),
+              SizedBox(height: 25),
+              Divider(),
+              // Other parts of your UI
+              // ...
             ],
-          ),
-          SizedBox(width: 20), // Add spacing between the pairs of text
-          Column(
-            children: [
-              Text(
-                '120 kWh', // Replace with the actual value
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xff23426f)),
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                'Electricity\nConsumption',
-                style: TextStyle(fontSize: 13),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ],
-      ),
-      SizedBox(height: 25),
-      Divider(),
-    ],
-  );
+          );
+        }
+      },
+    );
+  }
 
   Widget buildTop() {
     final bottom = profileHeight / 2;

@@ -35,55 +35,64 @@ class _PaymentHistoryState extends State<PaymentHistory> {
     currentUser = auth.currentUser;
     if (currentUser != null) {
       print("USER ID: ${currentUser?.uid}");
-      final roomNum = await getRoomForCurrentUser(); // Get the RoomNum associated with the current user
+      final roomNumbers = await getRoomsForCurrentUser(); // Get all RoomNums associated with the current user
 
-      _paymentRecordReference.onValue.listen((event) {
-        final data = event.snapshot.value;
-        if (data is Map) {
-          // Filter payment data by matching RoomNum with the current user's Room
-          paymentData = data.entries
-              .where((entry) => entry.value['RoomNum'] == roomNum)
-              .map<Map<String, dynamic>>((entry) {
-            final payment = entry.value;
-            return {
-              'ref': entry.key,
-              'date': payment['Date'],
-              'paidBy': payment['PaidBy'],
-              'paymentAmount': payment['PaymentAmount'],
-              'paymentStatus': payment['PaymentStatus'],
-              'proofImage': payment['ProofImage'],
-              'roomNum': payment['RoomNum'],
-            };
-          }).toList();
-          // Sort paymentData by date in descending order
-          paymentData.sort((a, b) {
-            var format = DateFormat("MM-dd-yyyy");
-            var dateA = format.parse(a['date']);
-            var dateB = format.parse(b['date']);
-            return dateB.compareTo(dateA);
-          });
-          setState(() {});
-        } else {
-          print("Data is not in the expected format");
-        }
-      });
+      // Clear the paymentData list
+      paymentData.clear();
+
+      for (final roomNum in roomNumbers) {
+        _paymentRecordReference.onValue.listen((event) {
+          final data = event.snapshot.value;
+          if (data is Map) {
+            // Filter payment data by matching RoomNum with the current user's rooms
+            final paymentsForRoom = data.entries
+                .where((entry) => entry.value['RoomNum'] == roomNum)
+                .map<Map<String, dynamic>>((entry) {
+              final payment = entry.value;
+              return {
+                'ref': entry.key,
+                'date': payment['Date'],
+                'paidBy': payment['PaidBy'],
+                'paymentAmount': payment['PaymentAmount'],
+                'paymentStatus': payment['PaymentStatus'],
+                'proofImage': payment['ProofImage'],
+                'roomNum': payment['RoomNum'],
+              };
+            }).toList();
+
+            // Add payments for this room to the paymentData list
+            paymentData.addAll(paymentsForRoom);
+
+            // Sort the paymentData by date in descending order
+            paymentData.sort((a, b) {
+              var format = DateFormat("MM-dd-yyyy");
+              var dateA = format.parse(a['date']);
+              var dateB = format.parse(b['date']);
+              return dateB.compareTo(dateA);
+            });
+            setState(() {});
+          } else {
+            print("Data is not in the expected format");
+          }
+        });
+      }
     } else {
       print("No User");
     }
   }
 
   // Function to get the Room associated with the current user
-  Future<String> getRoomForCurrentUser() async {
+  Future<List<dynamic>> getRoomsForCurrentUser() async {
     final userId = currentUser?.uid;
+    List<dynamic> roomNumbers = [];
     if (userId != null) {
       final roomSnapshot = await _roomsDataReference.orderByChild("UserID").equalTo(userId).once();
       final roomData = roomSnapshot.snapshot.value as Map<dynamic, dynamic>?;
       if (roomData != null && roomData.isNotEmpty) {
-        // Assuming the user has only one room, return the first key (RoomNum)
-        return roomData.keys.first;
+        roomNumbers = roomData.keys.toList();
       }
     }
-    return ""; // Return an empty string if no room is found
+    return roomNumbers;
   }
 
   final FirebaseStorage _storage = FirebaseStorage.instance;

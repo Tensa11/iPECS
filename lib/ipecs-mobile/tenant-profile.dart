@@ -37,60 +37,73 @@ class _TenantProfileState extends State<TenantProfile> {
     super.initState();
     getPayments();
   }
+
   Future<void> getPayments() async {
     currentUser = auth.currentUser;
     if (currentUser != null) {
       print("USER ID: ${currentUser?.uid}");
-      final roomNum = await getRoomForCurrentUser(); // Get the RoomNum associated with the current user
+      final roomNumbers = await getRoomsForCurrentUser(); // Get all RoomNums associated with the current user
 
-      _paymentRecordReference.onValue.listen((event) {
-        final data = event.snapshot.value;
-        if (data is Map) {
-          // Filter payment data by matching RoomNum with the current user's Room
-          paymentData = data.entries
-              .where((entry) => entry.value['RoomNum'] == roomNum)
-              .map<Map<String, dynamic>>((entry) {
-            final payment = entry.value;
-            return {
-              'ref': entry.key,
-              'date': payment['Date'],
-              'paidBy': payment['PaidBy'],
-              'paymentAmount': payment['PaymentAmount'],
-              'paymentStatus': payment['PaymentStatus'],
-              'proofImage': payment['ProofImage'],
-              'roomNum': payment['RoomNum'],
-            };
-          }).toList();
-          // Sort paymentData by date in descending order
-          paymentData.sort((a, b) {
-            var format = DateFormat("MM-dd-yyyy");
-            var dateA = format.parse(a['date']);
-            var dateB = format.parse(b['date']);
-            return dateB.compareTo(dateA);
-          });
-          paymentData = paymentData.take(4).toList();
-          setState(() {});
-        } else {
-          print("Data is not in the expected format");
-        }
-      });
+      // Clear the paymentData list
+      paymentData.clear();
+
+      for (final roomNum in roomNumbers) {
+        _paymentRecordReference.onValue.listen((event) {
+          final data = event.snapshot.value;
+          if (data is Map) {
+            // Filter payment data by matching RoomNum with the current user's rooms
+            final paymentsForRoom = data.entries
+                .where((entry) => entry.value['RoomNum'] == roomNum)
+                .map<Map<String, dynamic>>((entry) {
+              final payment = entry.value;
+              return {
+                'ref': entry.key,
+                'date': payment['Date'],
+                'paidBy': payment['PaidBy'],
+                'paymentAmount': payment['PaymentAmount'],
+                'paymentStatus': payment['PaymentStatus'],
+                'proofImage': payment['ProofImage'],
+                'roomNum': payment['RoomNum'],
+              };
+            }).toList();
+
+            // Add payments for this room to the paymentData list
+            paymentData.addAll(paymentsForRoom);
+
+            // Sort the paymentData by date in descending order
+            paymentData.sort((a, b) {
+              var format = DateFormat("MM-dd-yyyy");
+              var dateA = format.parse(a['date']);
+              var dateB = format.parse(b['date']);
+              return dateB.compareTo(dateA);
+            });
+
+            // Take the latest 4 payments for all rooms combined
+            paymentData = paymentData.take(4).toList();
+
+            setState(() {});
+          } else {
+            print("Data is not in the expected format");
+          }
+        });
+      }
     } else {
       print("No User");
     }
   }
 
   // Function to get the Room associated with the current user
-  Future<String> getRoomForCurrentUser() async {
+  Future<List<dynamic>> getRoomsForCurrentUser() async {
     final userId = currentUser?.uid;
+    List<dynamic> roomNumbers = [];
     if (userId != null) {
       final roomSnapshot = await _roomsDataReference.orderByChild("UserID").equalTo(userId).once();
       final roomData = roomSnapshot.snapshot.value as Map<dynamic, dynamic>?;
       if (roomData != null && roomData.isNotEmpty) {
-        // Assuming the user has only one room, return the first key (RoomNum)
-        return roomData.keys.first;
+        roomNumbers = roomData.keys.toList();
       }
     }
-    return ""; // Return an empty string if no room is found
+    return roomNumbers;
   }
 
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -129,6 +142,22 @@ class _TenantProfileState extends State<TenantProfile> {
       gravity: ToastGravity.TOP,
     );
     showImageDialog(imageName);
+  }
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.reference().child('Users');
+
+  Future<Map<String, dynamic>> getUserData() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      DatabaseEvent event = await _dbRef.child(user.uid).once();
+      if (event.snapshot.value != null) {
+        if (event.snapshot.value is Map) {
+          return Map<String, dynamic>.from(event.snapshot.value as Map);
+        }
+      }
+    }
+    return {};
   }
 
   @override
@@ -286,58 +315,79 @@ class _TenantProfileState extends State<TenantProfile> {
     );
   }
 
-  Widget buildContent() => const Column(
-    children: [
-      SizedBox(height: 30),
-      Text(
-        'Ana Croft',
-        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-      ),
-      SizedBox(height: 5),
-      Text(
-        'Tenant: Room 1',
-        style: TextStyle(fontSize: 20, color: Colors.black),
-      ),
-      Divider(),
-      SizedBox(height: 16),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Column(
+  Widget buildContent() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: getUserData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CircularProgressIndicator(); // Show a loader while data is fetched
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Text('No user data available');
+        } else {
+          final userData = snapshot.data!;
+          final username = userData['username'];
+          final userRole = userData['userRole'];
+          final userId = userData['userId']; // Assuming you have a 'userId' field in your user data structure
+
+          return Column(
             children: [
+              SizedBox(height: 30),
               Text(
-                '₱500', // Replace with the actual value
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xff23426f)),
-                textAlign: TextAlign.center,
+                username ?? 'Username',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
               ),
+              SizedBox(height: 5),
               Text(
-                'Credit\nBalance',
-                style: TextStyle(fontSize: 13),
-                textAlign: TextAlign.center,
+                userRole ?? 'Role',
+                style: TextStyle(fontSize: 20, color: Colors.black),
               ),
+              Divider(),
+              SizedBox(height: 16),
+              FutureBuilder<List<dynamic>>(
+                future: getRoomsForCurrentUser(), // Fetch rooms owned by the user
+                builder: (context, roomSnapshot) {
+                  if (roomSnapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator(); // Show a loader while room data is fetched
+                  } else if (roomSnapshot.hasError) {
+                    return Text('Error fetching room data: ${roomSnapshot.error}');
+                  } else {
+                    final roomNumbers = roomSnapshot.data ?? [];
+                    final totalRooms = roomNumbers.length;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                              '$totalRooms',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xff23426f)),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              'Total\n Rooms', //Show all Rooms Owned by the user
+                              style: TextStyle(fontSize: 13),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+                },
+              ),
+              SizedBox(height: 25),
+              Divider(),
+              // Other parts of your UI
+              // ...
             ],
-          ),
-          SizedBox(width: 20), // Add spacing between the pairs of text
-          Column(
-            children: [
-              Text(
-                '120 kWh', // Replace with the actual value
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xff23426f)),
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                'Electricity\nConsumption',
-                style: TextStyle(fontSize: 13),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ],
-      ),
-      SizedBox(height: 25),
-      Divider(),
-    ],
-  );
+          );
+        }
+      },
+    );
+  }
+
 
   Widget buildTop() {
     final bottom = profileHeight / 2;
