@@ -198,6 +198,7 @@ class _LandlordProfileState extends State<LandlordProfile> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
+                            SizedBox(height: 5),
                             Text(
                               '${payment['ref']}',
                               style: const TextStyle(

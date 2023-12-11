@@ -1,25 +1,19 @@
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
-import 'package:iPECS/ipecs-mobile/tenant-payments-history.dart';
+import 'package:iPECS/ipecs-mobile/landlord-dashboard.dart';
+import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:iPECS/utils.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
-
-class NewPayment extends StatefulWidget {
-  const NewPayment({super.key});
+class ManualPayment extends StatefulWidget {
+  const ManualPayment({super.key});
 
   @override
-  _NewPaymentState createState() => _NewPaymentState();
+  _ManualPaymentState createState() => _ManualPaymentState();
 }
 
-class _NewPaymentState extends State<NewPayment> {
+class _ManualPaymentState extends State<ManualPayment> {
   double baseWidth = 375;
   double sizeAxis = 1.0;
   double size = 1.0;
@@ -27,40 +21,14 @@ class _NewPaymentState extends State<NewPayment> {
 
   List<String> roomNumbers = []; // Update to an empty list
   String selectedRoomNumber = ""; // Set the initial selection to an empty string
-  XFile? imagePath; // Store the path to the uploaded image
   final user = FirebaseAuth.instance.currentUser!;
   final DatabaseReference _database = FirebaseDatabase.instance.reference();
 
-  TextEditingController referenceController = TextEditingController(); // Add a TextEditingController for the reference input
-  TextEditingController paidByController = TextEditingController();
   TextEditingController amountController = TextEditingController();
 
-  // Function to save the image to Firebase Storage
-  Future<void> saveImageToFirebaseStorage() async {
-    if (imagePath != null) {
-      final String referenceNumber = 'Ref-${referenceController.text.padLeft(9, '0')}'; // Format reference number as 'Ref-123456789'
-      final Reference storageReference = FirebaseStorage.instance
-          .ref()
-          .child('PaymentProof/$referenceNumber.png'); // Use .png as the format
-      final UploadTask uploadTask = storageReference.putFile(File(imagePath!.path));
-      await uploadTask.whenComplete(() {
-        print('Image uploaded to Firebase Storage');
-      }).catchError((error) {
-        print('Error uploading image to Firebase Storage: $error');
-      });
-    }
-  }
-
-  final referenceNumberFormatter = FilteringTextInputFormatter.allow(RegExp(r'\d{0,9}'));
-
-  // Updated submitPayment function to include image upload
   void submitPayment() async {
-    if (amountController.text.isEmpty ||
-        selectedRoomNumber.isEmpty ||
-        imagePath == null ||
-        referenceController.text.isEmpty ||
-        paidByController.text.isEmpty) {
-      // Show an alert or message to ensure all fields are filled
+    if (amountController.text.isEmpty || selectedRoomNumber.isEmpty) {
+      // Show an alert or message to ensure both fields are filled
       showDialog(
         context: context,
         builder: (context) {
@@ -77,7 +45,7 @@ class _NewPaymentState extends State<NewPayment> {
               ),
             ),
             content: Text(
-              'Please enter all the fields',
+              'Please enter the amount and select the room number',
               style: SafeGoogleFont(
                 'Urbanist',
                 fontSize: 15 * size,
@@ -111,13 +79,13 @@ class _NewPaymentState extends State<NewPayment> {
       return;
     }
 
-    // Show confirmation dialog before submitting the payment
+    // Show a confirmation dialog before submitting the payment
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text(
-            'Confirmation',
+            'Confirm Submission',
             style: SafeGoogleFont(
               'Urbanist',
               fontSize: 18 * size,
@@ -128,7 +96,7 @@ class _NewPaymentState extends State<NewPayment> {
             ),
           ),
           content: Text(
-            'Are you sure you want to submit this payment?',
+            'Are you sure you want to submit the manual payment?',
             style: SafeGoogleFont(
               'Urbanist',
               fontSize: 15 * size,
@@ -140,49 +108,11 @@ class _NewPaymentState extends State<NewPayment> {
           ),
           actions: [
             TextButton(
-              onPressed: () async {
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return Center(
-                      child: CircularProgressIndicator(
-                        color: Color(0xffdfb153),
-                      ),
-                    );
-                  },
-                );
-                if (imagePath != null) {
-                  final String referenceNumber = 'Ref-${referenceController.text.padLeft(9, '0')}';
-                  final String currentDate = DateFormat('MM-dd-yyyy').format(DateTime.now());
-                  final String userName = paidByController.text;
-
-                  await saveImageToFirebaseStorage();
-
-                  final NumberFormat formatter = NumberFormat.currency(symbol: '', decimalDigits: 2);
-                  final double paymentAmount = double.parse(amountController.text); // Convert entered amount to a double
-
-                  final Map<String, dynamic> paymentData = {
-                    'Date': currentDate,
-                    'PaidBy': userName,
-                    'PaymentAmount': paymentAmount, // Store the payment amount as a number
-                    'ProofImage': 'PaymentProof/$referenceNumber.png',
-                    'RoomNum': selectedRoomNumber,
-                  };
-
-                  _database.child('PaymentManage').child(referenceNumber).set(paymentData).then((_) {
-                    print('Payment data saved to Firebase: $paymentData');
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const PaymentHistory(),
-                      ),
-                    );
-                  }).catchError((error) {
-                    print('Error saving payment data: $error');
-                  });
-                }
+              onPressed: () {
+                Navigator.pop(context);
               },
               child: Text(
-                'Yes',
+                'Cancel',
                 style: SafeGoogleFont(
                   'Urbanist',
                   fontSize: 15 * size,
@@ -194,11 +124,53 @@ class _NewPaymentState extends State<NewPayment> {
               ),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close the confirmation dialog
+              onPressed: () async {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const LandlordDashboard(),
+                  ),
+                );
+
+                double enteredAmount = double.parse(amountController.text);
+
+                // Fetch the current 'CurrentCredit' value of the selected room from Firebase
+                DatabaseReference roomRef = _database.child('Rooms').child(selectedRoomNumber);
+                try {
+                  DataSnapshot snapshot = await roomRef.once().then((event) => event.snapshot);
+                  if (snapshot.value != null) {
+                    Map<dynamic, dynamic> roomData = snapshot.value as Map<dynamic, dynamic>;
+                    double? currentCredit = roomData['CurrentCredit'] as double?;
+                    if (currentCredit != null) {
+                      // Calculate the updated credit after adding the entered amount
+                      double updatedCredit = currentCredit + enteredAmount;
+
+                      // Update the 'CurrentCredit' value for the selected room in Firebase
+                      await roomRef.update({'CurrentCredit': updatedCredit}).then((_) {
+                        // Navigate to LandlordDashboard after successful payment update
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => LandlordDashboard(),
+                          ),
+                        );
+                      }).catchError((error) {
+                        print('Failed to update payment: $error');
+                        // Show error message if the update fails
+                      });
+                    } else {
+                      print('Current credit value is null.');
+                      // Handle the scenario where the current credit value is null
+                    }
+                  } else {
+                    print('Room data not found.');
+                    // Handle the scenario where room data is not found
+                  }
+                } catch (error) {
+                  print('Error fetching room data: $error');
+                  // Show error message if fetching room data fails
+                }
               },
               child: Text(
-                'No',
+                'Submit',
                 style: SafeGoogleFont(
                   'Urbanist',
                   fontSize: 15 * size,
@@ -214,6 +186,7 @@ class _NewPaymentState extends State<NewPayment> {
       },
     );
   }
+
 
 
   @override
@@ -253,7 +226,7 @@ class _NewPaymentState extends State<NewPayment> {
     size = sizeAxis * 0.97;
     return Scaffold(
       endDrawer: const Drawer(
-        child: TenantDrawer(), // Call your custom drawer widget here
+        child: LandlordDrawer(), // Call your custom drawer widget here
       ),
       body: SingleChildScrollView(
         child: SizedBox(
@@ -294,7 +267,7 @@ class _NewPaymentState extends State<NewPayment> {
                               image: const DecorationImage(
                                 fit: BoxFit.cover,
                                 image: AssetImage(
-                                  'assets/ipecs-mobile/images/user1.png',
+                                  'assets/ipecs-mobile/images/user2.png',
                                 ),
                               ),
                             ),
@@ -320,9 +293,9 @@ class _NewPaymentState extends State<NewPayment> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 100 * sizeAxis, 4 * sizeAxis),
+                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 90 * sizeAxis, 4 * sizeAxis),
                   child: Text(
-                    'Payment Details',
+                    'Manual Payment',
                     style: GoogleFonts.urbanist(
                       fontSize: 30 * size,
                       fontWeight: FontWeight.w700,
@@ -338,72 +311,12 @@ class _NewPaymentState extends State<NewPayment> {
                     maxWidth: 181 * sizeAxis,
                   ),
                   child: Text(
-                    'Fill up the needed details and attach the proof of payment',
+                    'Fill up the amount and select the room',
                     style: GoogleFonts.inter(
                       fontSize: 13 * size,
                       fontWeight: FontWeight.w400,
                       height: 1.5384615385 * size / sizeAxis,
                       color: const Color(0xff1e232c),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 15 * sizeAxis),
-                  width: 331 * sizeAxis,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8 * sizeAxis),
-                    border: Border.all(color: const Color(0xffe8ecf4)),
-                    color: const Color(0xfff7f8f9),
-                  ),
-                  child: TextField(
-                    controller: referenceController, // Use the referenceController to capture user input
-                    inputFormatters: [referenceNumberFormatter], // Set input formatter for the reference number
-                    maxLength: 9,
-                    decoration: InputDecoration(
-                      counterText: '',
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 18 * sizeAxis, 18 * sizeAxis, 19 * sizeAxis),
-                      hintText: 'Reference Number',
-                      hintStyle: const TextStyle(color: Color(0xff8390a1)),
-                    ),
-                    style: GoogleFonts.urbanist(
-                      fontSize: 15 * size,
-                      fontWeight: FontWeight.w500,
-                      height: 1.25 * size / sizeAxis,
-                      color: const Color(0xff000000),
-                    ),
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 15 * sizeAxis),
-                  width: double.infinity,
-                  height: 56 * sizeAxis,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xffe8ecf4)),
-                    color: const Color(0xfff7f7f8),
-                    borderRadius: BorderRadius.circular(8 * sizeAxis),
-                  ),
-                  child: TextField(
-                    controller: paidByController,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
-                      hintText: 'Name',
-                      hintStyle: const TextStyle(color: Color(0xff8390a1)),
-                    ),
-                    style: GoogleFonts.urbanist(
-                      fontSize: 15 * size,
-                      fontWeight: FontWeight.w500,
-                      height: 1.25 * size / sizeAxis,
-                      color: const Color(0xff000000),
                     ),
                   ),
                 ),
@@ -418,6 +331,7 @@ class _NewPaymentState extends State<NewPayment> {
                   ),
                   child: TextField(
                     controller: amountController,
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -464,43 +378,6 @@ class _NewPaymentState extends State<NewPayment> {
                       hintStyle: const TextStyle(color: Color(0xff8390a1)),
                     ),
                   ),
-                ),
-                Container(
-                    margin: EdgeInsets.fromLTRB(1 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis, 59 * sizeAxis),
-                    width: double.infinity,
-                    height: 56 * sizeAxis,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: const Color(0xffe8ecf4)),
-                      color: const Color(0xfff7f7f8),
-                      borderRadius: BorderRadius.circular(8 * sizeAxis),
-                    ),
-                    child: TextButton(
-                      onPressed: () async {
-                        final ImagePicker _picker = ImagePicker();
-                        final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
-                        if (pickedImage != null) {
-                          setState(() {
-                            imagePath = pickedImage;
-                          });
-                        }
-                      },
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              imagePath == null ? 'Proof of Payment' : imagePath!.name, // Use the image name if it's not null
-                              style: GoogleFonts.urbanist(
-                                fontSize: 15 * size,
-                                fontWeight: FontWeight.w500,
-                                height: 1.25 * size / sizeAxis,
-                                color: imagePath == null ? const Color(0xff8390a1) : const Color(0xff000000),
-                              ),
-                            ),
-                          ),
-                          const Icon(Icons.upload, color: Color(0xff8390a1)),
-                        ],
-                      ),
-                    )
                 ),
                 Container(
                   margin: EdgeInsets.fromLTRB(39 * sizeAxis, 0 * sizeAxis, 36 * sizeAxis, 0 * sizeAxis),

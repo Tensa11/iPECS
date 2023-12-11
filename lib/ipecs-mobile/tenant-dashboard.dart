@@ -16,27 +16,27 @@ import 'package:intl/intl.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 Future<void> _firebaseBackgroundMessageHandler(RemoteMessage message) async {await Firebase.initializeApp();
-  print("Handling a background message: ${message.messageId}");
+print("Handling a background message: ${message.messageId}");
 
-  // Parse the message data
-  String roomName = message.data['roomName'];
-  double currentCredit = double.tryParse(message.data['currentCredit'] ?? '') ?? 0;
+// Parse the message data
+String roomName = message.data['roomName'];
+double currentCredit = double.tryParse(message.data['currentCredit'] ?? '') ?? 0;
 
-  // Show a local notification
-  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'channelId',
-      'channelName',
-      channelDescription: 'channelDescription',
-      importance: Importance.max,
-      priority: Priority.high,
-      showWhen: false);
-  var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-  await flutterLocalNotificationsPlugin.show(
-      0,
-      'iPECS: Daily Credit Alert',
-      'Your Credit ₱${currentCredit.toStringAsFixed(2)} in $roomName is at critical, add new credit to avoid disconnection',
-      platformChannelSpecifics,
-      payload: 'item x');
+// Show a local notification
+var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'channelId',
+    'channelName',
+    channelDescription: 'channelDescription',
+    importance: Importance.max,
+    priority: Priority.high,
+    showWhen: false);
+var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+await flutterLocalNotificationsPlugin.show(
+    0,
+    'iPECS: Daily Credit Alert',
+    'Your Credit ₱${currentCredit.toStringAsFixed(2)} in $roomName is at critical, add new credit to avoid disconnection',
+    platformChannelSpecifics,
+    payload: 'item x');
 }
 
 class TenantDashboard extends StatefulWidget {
@@ -75,7 +75,6 @@ class _TenantDashboardState extends State<TenantDashboard> {
     });
   }
 
-
   Future<void> getRooms() async {
     currentUser = auth.currentUser;
     if (currentUser != null) {
@@ -90,12 +89,19 @@ class _TenantDashboardState extends State<TenantDashboard> {
                 room['UserID'] == currentUser?.uid;
           }).map<Map<String, dynamic>>((entry) {
             final room = entry.value;
+            final powerConsumption = room['PowerConsumption'] ?? {};
+            // Get the highest power consumption value in this room
+            final highestPowerConsumption = powerConsumption.values.reduce((value, element) => value > element ? value : element);
             return {
               'name': entry.key,
               'currentcredit': room['CurrentCredit'] ?? 0,
               'creditcriticallevel': room['CreditCriticalLevel'] ?? 0,
+              'highestPowerConsumption': highestPowerConsumption ?? 0,
             };
           }).toList();
+
+          roomData.sort((a, b) => a['name'].compareTo(b['name']));
+
           setState(() {});
         } else {
           print("Data is not in the expected format");
@@ -105,6 +111,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
       print("No User");
     }
   }
+
 
   Future<void> showNotification(String roomName, double currentCredit) async {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
@@ -358,6 +365,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
+                                  SizedBox(height: 5),
                                   Text(
                                     'Critical Level: ${room['creditcriticallevel']}',
                                     style: TextStyle(
@@ -374,6 +382,17 @@ class _TenantDashboardState extends State<TenantDashboard> {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                       decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    'Power: ${room['highestPowerConsumption']} KWh',
+                                    style: TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.none,
+                                      color: Color(0xffdfb153),
                                     ),
                                   ),
                                 ],
@@ -435,6 +454,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
+                                  SizedBox(height: 5),
                                   Text(
                                     '${payment['ref']}',
                                     style: const TextStyle(

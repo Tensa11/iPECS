@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
+import 'package:iPECS/ipecs-mobile/landlord-manual-payment.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -85,6 +86,57 @@ class _PaymentManageState extends State<PaymentManage> {
   }
 
   void handleCheckButtonPress(Map<String, dynamic> payment) {
+    double sizeAxis = 1.0;
+    double size = 1.0;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Payment Confirmed',
+            style: SafeGoogleFont(
+              'Urbanist',
+              fontSize: 18 * size,
+              fontWeight: FontWeight.w500,
+              height: 1.2 * size / sizeAxis,
+              color: const Color(0xff5c5473),
+              decoration: TextDecoration.none,
+            ),
+          ),
+          content: Text(
+            'The Payment has been accepted and reviewed',
+            style: SafeGoogleFont(
+              'Urbanist',
+              fontSize: 15 * size,
+              fontWeight: FontWeight.w500,
+              height: 1.2 * size / sizeAxis,
+              color: const Color(0xff5c5473),
+              decoration: TextDecoration.none,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Ok',
+                style: SafeGoogleFont(
+                  'Urbanist',
+                  fontSize: 15 * size,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2 * size / sizeAxis,
+                  color: const Color(0xff5c5473),
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
     String refNumber = payment['ref'];
     String roomNum = payment['roomNum'];
     int paymentAmount = payment['paymentAmount'] as int; // Parse paymentAmount to int
@@ -133,6 +185,56 @@ class _PaymentManageState extends State<PaymentManage> {
 
 
   void handleCloseButtonPress(Map<String, dynamic> payment) {
+    double sizeAxis = 1.0;
+    double size = 1.0;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Payment Confirmed',
+            style: SafeGoogleFont(
+              'Urbanist',
+              fontSize: 18 * size,
+              fontWeight: FontWeight.w500,
+              height: 1.2 * size / sizeAxis,
+              color: const Color(0xff5c5473),
+              decoration: TextDecoration.none,
+            ),
+          ),
+          content: Text(
+            'The Payment has been rejected and reviewed',
+            style: SafeGoogleFont(
+              'Urbanist',
+              fontSize: 15 * size,
+              fontWeight: FontWeight.w500,
+              height: 1.2 * size / sizeAxis,
+              color: const Color(0xff5c5473),
+              decoration: TextDecoration.none,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Ok',
+                style: SafeGoogleFont(
+                  'Urbanist',
+                  fontSize: 15 * size,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2 * size / sizeAxis,
+                  color: const Color(0xff5c5473),
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
     // Use the same reference number from PaymentManage
     String refNumber = payment['ref'];
 
@@ -306,6 +408,7 @@ class _PaymentManageState extends State<PaymentManage> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
+                                  SizedBox(height: 5),
                                   Text(
                                     '${payment['ref']}',
                                     style: const TextStyle(
@@ -377,6 +480,17 @@ class _PaymentManageState extends State<PaymentManage> {
             ),
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const ManualPayment(),
+            ),
+          );
+        },
+        child: Icon(Icons.payment),
+        backgroundColor: Color(0xffdfb153),
       ),
     );
   }

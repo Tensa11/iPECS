@@ -48,7 +48,6 @@ class _AddUserState extends State<AddUser> {
         };
 
         if (selectedRoomNumber != 'None') {
-          userData['RoomNum'] = selectedRoomNumber;
           final roomData = {
             'UserID': user.uid,
           };

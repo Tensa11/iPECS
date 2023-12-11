@@ -249,6 +249,7 @@ class _PaymentHistoryState extends State<PaymentHistory> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
+                                  SizedBox(height: 5),
                                   Text(
                                     '${payment['ref']}',
                                     style: const TextStyle(

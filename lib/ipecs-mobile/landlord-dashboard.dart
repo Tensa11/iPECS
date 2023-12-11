@@ -36,19 +36,28 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
     DataSnapshot snapshot = await _roomsRef.get();
     DataSnapshot userSnapshot = await _usersRef.get();
     if (snapshot.value is Map && userSnapshot.value is Map) {
-      Map<dynamic, dynamic> roomValues = new Map<dynamic, dynamic>.from(snapshot.value as Map);
-      Map<dynamic, dynamic> userValues = new Map<dynamic, dynamic>.from(userSnapshot.value as Map);
+      Map<dynamic, dynamic> roomValues = Map<dynamic, dynamic>.from(snapshot.value as Map);
+      Map<dynamic, dynamic> userValues = Map<dynamic, dynamic>.from(userSnapshot.value as Map);
+
       roomValues.forEach((key, value) {
         String tenantName = userValues[value['UserID']]['username'] ?? 'No Name';
+        List<double> consumptionValues = (value['PowerConsumption'] as Map<dynamic, dynamic>)
+            .values
+            .map<double>((e) => e as double)
+            .toList();
+        double maxPowerConsumption = consumptionValues.isNotEmpty ? consumptionValues.reduce((a, b) => a > b ? a : b) : 0.0;
+
         roomData.add({
           'name': key,
           'currentcredit': value['CurrentCredit'],
           'creditcriticallevel': value['CreditCriticalLevel'],
           'electricityprice': value['ElectricityPrice'],
           'userid': value['UserID'],
-          'tenantName': tenantName
+          'tenantName': tenantName,
+          'highestPowerConsumption': maxPowerConsumption, // Adding the highest power consumption to roomData
         });
       });
+
       roomData.sort((a, b) => a['name'].compareTo(b['name']));
       setState(() {});
     }
@@ -249,6 +258,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
+                                  SizedBox(height: 5),
                                   Text(
                                     'Room Credit: ₱${(room['currentcredit'] ?? 0).toStringAsFixed(2)}',
                                     style: TextStyle(
@@ -256,6 +266,16 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                       decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Power: ${room['highestPowerConsumption']} KWh',
+                                    style: TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.none,
+                                      color: Color(0xffdfb153),
                                     ),
                                   ),
                                 ],
@@ -311,6 +331,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: <Widget>[
+                                  SizedBox(height: 5),
                                   Text(
                                     '${payment['ref']}',
                                     style: const TextStyle(
