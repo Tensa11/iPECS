@@ -74,19 +74,24 @@ class _AddUserState extends State<AddUser> {
 
   // Fetch available room numbers from Firebase
   void fetchAvailableRooms() {
-    final DatabaseReference _roomsReference = FirebaseDatabase.instance.reference().child("Rooms");
+    final DatabaseReference _roomsReference =
+    FirebaseDatabase.instance.reference().child("Rooms");
 
     _roomsReference.onValue.listen((event) {
       final data = event.snapshot.value;
       if (data is Map) {
-        final availableRooms = data.keys.toList().cast<String>(); // Convert to List<String>
+        final availableRooms =
+        data.keys.toList().cast<String>(); // Convert to List<String>
 
         // Sort room numbers before updating state
         availableRooms.sort((a, b) => a.compareTo(b));
 
         setState(() {
-          roomNumbers = availableRooms;
-          if (!roomNumbers.contains(selectedRoomNumber) && availableRooms.isNotEmpty) {
+          // Add "None" as an option at the beginning of the roomNumbers list
+          roomNumbers = ['None', ...availableRooms];
+
+          if (!roomNumbers.contains(selectedRoomNumber) &&
+              availableRooms.isNotEmpty) {
             // Update the selected room number only if it is not in the updated room list
             selectedRoomNumber = availableRooms[0];
           }
@@ -96,6 +101,7 @@ class _AddUserState extends State<AddUser> {
       print("Error fetching available room numbers: $error");
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +259,8 @@ class _AddUserState extends State<AddUser> {
                       color: const Color(0xfff7f7f8),
                     ),
                     child: DropdownButtonFormField<String>(
-                      value: selectedRoomNumber.isNotEmpty && roomNumbers.contains(selectedRoomNumber)
+                      value: selectedRoomNumber.isNotEmpty &&
+                          roomNumbers.contains(selectedRoomNumber)
                           ? selectedRoomNumber
                           : roomNumbers.isNotEmpty
                           ? roomNumbers[0]
@@ -271,7 +278,8 @@ class _AddUserState extends State<AddUser> {
                       },
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.fromLTRB(18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
+                        contentPadding: EdgeInsets.fromLTRB(
+                            18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
                         hintText: 'Room Number',
                         hintStyle: const TextStyle(color: Color(0xff8390a1)),
                       ),
@@ -357,17 +365,33 @@ class _AddUserState extends State<AddUser> {
                   Container(
                     margin: EdgeInsets.fromLTRB(37 * sizeAxis, 0 * sizeAxis, 38 * sizeAxis, 0 * sizeAxis),
                     child: TextButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        // Show the progress dialog
                         showDialog(
-                            context: context,
-                            builder: (context){
-                              return Center(child: CircularProgressIndicator(
+                          context: context,
+                          barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+                          builder: (context) {
+                            return Center(
+                              child: CircularProgressIndicator(
                                 color: Color(0xffdfb153),
-                              ));
-                            }
+                              ),
+                            );
+                          },
                         );
-                        createUser(_emailController.text, _passwordController.text);// Call the createUser function on button press
-                        Navigator.of(context).pop();
+                        try {
+                          // Create the user
+                          await createUser(_emailController.text, _passwordController.text);
+                          // Close the dialog when the user creation is complete
+                          Navigator.of(context).pop();
+                          // After successfully creating the user, navigate back
+                          Navigator.of(context).pop();
+                        } catch (error) {
+                          // Handle any errors here
+                          print('Error creating user: $error');
+                          // Close the dialog if an error occurs
+                          Navigator.of(context).pop();
+                          // Optionally, show an error dialog or handle the error in another way
+                        }
                       },
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,

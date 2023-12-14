@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/landlord-add-user.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
-import 'package:iPECS/ipecs-mobile/landlord-edit-user.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
-import 'dart:ui';
 import 'package:iPECS/utils.dart';
 
 class ManageUser extends StatefulWidget {
@@ -95,10 +93,14 @@ class _ManageUserState extends State<ManageUser> {
     double size = sizeAxis * 0.97;
 
     TextEditingController usernameController = TextEditingController();
-    TextEditingController emailController = TextEditingController();
-    TextEditingController paswordController = TextEditingController();
+    TextEditingController contactNumController = TextEditingController();
 
-    // Add controllers for other fields as needed
+    // Fetch the user's current data to display in the dialog
+    Map<String, dynamic> currentUserData =
+    userData.firstWhere((user) => user['id'] == userId);
+
+    usernameController.text = currentUserData['username'];
+    contactNumController.text = currentUserData['contactNum'];
 
     Map<String, dynamic>? updatedData = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -129,9 +131,11 @@ class _ManageUserState extends State<ManageUser> {
                     color: const Color(0xff5c5473),
                   ),
                 ),
+                SizedBox(height: 20 * sizeAxis),
                 TextFormField(
-                  controller: emailController,
-                  decoration: InputDecoration(labelText: 'Email'),
+                  controller: contactNumController,
+                  decoration: InputDecoration(labelText: 'Contact Number'),
+                  keyboardType: TextInputType.phone,
                   style: GoogleFonts.urbanist(
                     fontSize: 15 * size,
                     fontWeight: FontWeight.w500,
@@ -139,35 +143,36 @@ class _ManageUserState extends State<ManageUser> {
                     color: const Color(0xff5c5473),
                   ),
                 ),
-                TextFormField(
-                  controller: paswordController,
-                  decoration: InputDecoration(labelText: 'Password'),
-                  style: GoogleFonts.urbanist(
-                    fontSize: 15 * size,
-                    fontWeight: FontWeight.w500,
-                    height: 1.25 * size / sizeAxis,
-                    color: const Color(0xff5c5473),
-                  ),
-                ),
-                // Add other TextFormField widgets for additional fields
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog without saving changes
+                Navigator.of(context).pop(null); // Close the dialog without saving changes
               },
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
-                Map<String, dynamic> updatedValues = {
-                  'username': usernameController.text,
-                  'email': emailController.text,
-                  // Add other updated fields here using controller values
-                };
-                Navigator.of(context).pop(updatedValues); // Close the dialog and pass the updated values
+              onPressed: () async {
+                // Update the username and contactNum locally
+                currentUserData['username'] = usernameController.text;
+                currentUserData['contactNum'] = contactNumController.text;
+
+                // Update the contactNum in Firebase
+                try {
+                  DatabaseReference userRef = _usersRef.child(userId);
+                  await userRef.update({
+                    'username': usernameController.text,
+                    'contactNum': contactNumController.text,
+                  });
+                  // Refresh the user data after updating the fields
+                  await getUsers();
+                } catch (error) {
+                  print('Error updating data: $error');
+                }
+
+                Navigator.of(context).pop(currentUserData); // Close the dialog and pass the updated values
               },
               child: const Text('Save'),
             ),
@@ -176,39 +181,13 @@ class _ManageUserState extends State<ManageUser> {
       },
     );
 
-    if (updatedData?.containsKey('email') == true) {
-      // Re-authenticate the user
-      User user = FirebaseAuth.instance.currentUser!;
-      AuthCredential credential = EmailAuthProvider.credential(
-        email: user.email!,
-        password: paswordController.text,
-      );
-      await user.reauthenticateWithCredential(credential);
-
-      // Update email in Firebase Authentication
-      await user.updateEmail(updatedData?['email']);
-    }
-
-    if ((updatedData ?? {})['email'] != null) {
-      // Re-authenticate the user
-      User user = FirebaseAuth.instance.currentUser!;
-      AuthCredential credential = EmailAuthProvider.credential(
-        email: user.email!,
-        password: paswordController.text,
-      );
-      await user.reauthenticateWithCredential(credential);
-
-      // Update password in Firebase Authentication
-      await user.updateEmail(updatedData?['password']);
-    }
-
-
     // Dispose controllers to free up resources
     usernameController.dispose();
-    emailController.dispose();
-    paswordController.dispose();
+    contactNumController.dispose();
     // Dispose other controllers as needed
   }
+
+
 
 
   @override

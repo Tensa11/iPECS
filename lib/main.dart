@@ -90,7 +90,7 @@ class SplashScreenTenant extends StatelessWidget {
 		return AnimatedSplashScreen(
 			splash: Lottie.asset('assets/lottie/LottieAnimationIntro.json'),
 			// splash: Lottie.network('https://lottiefiles.com/animations/light-bulb-rrtnthBH0O'),
-			nextScreen: TenantDashboard(),
+			nextScreen: const TenantDashboard(),
 			splashIconSize: 900,
 			duration: 2000,
 			splashTransition: SplashTransition.fadeTransition,
