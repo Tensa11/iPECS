@@ -21,12 +21,14 @@ class _LandlordLoginState extends State<LandlordLogin> {
 
   void _signIn() async {
     showDialog(
-        context: context,
-        builder: (context){
-          return Center(child: CircularProgressIndicator(
+      context: context,
+      builder: (context) {
+        return Center(
+          child: CircularProgressIndicator(
             color: Color(0xffdfb153),
-          ));
-        }
+          ),
+        );
+      },
     );
     try {
       final loginUser = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -47,11 +49,21 @@ class _LandlordLoginState extends State<LandlordLogin> {
         final snapshotValue = snapshot.snapshot.value;
 
         if (snapshotValue != null) {
-          if ((snapshotValue as Map)['userRole'] == 'Landlord') {
-            // If the user is a Landlord, navigate to LandlordDashboard
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const LandlordDashboard()));
-          } else if ((snapshotValue as Map)['userRole'] == 'Tenant') {
-            // If the user is a Tenant, show an error message
+          final userRole = (snapshotValue as Map)['userRole'];
+          final userStatus = (snapshotValue as Map)['userStatus'];
+
+          if (userRole == 'Landlord') {
+            if (userStatus == true) {
+              // If the user is a Tenant and userStatus is true, navigate to TenantDashboard
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const LandlordDashboard()));
+            } else {
+              // If userStatus is false, show an error message
+              setState(() {
+                _errorMessage = 'Your account is disabled. Contact the admin for assistance.';
+              });
+            }
+          } else if (userRole == 'Tenant') {
+            // If the user is a Landlord, show an error message
             setState(() {
               _errorMessage = 'Tenants are not allowed to log in here.';
             });

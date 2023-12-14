@@ -43,6 +43,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
     final DatabaseReference _usersRef = FirebaseDatabase.instance.reference().child("Users");
     DataSnapshot snapshot = await _roomsRef.get();
     DataSnapshot userSnapshot = await _usersRef.get();
+
     if (snapshot.value is Map && userSnapshot.value is Map) {
       Map<dynamic, dynamic> roomValues = Map<dynamic, dynamic>.from(snapshot.value as Map);
       Map<dynamic, dynamic> userValues = Map<dynamic, dynamic>.from(userSnapshot.value as Map);
@@ -53,7 +54,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
             .values
             .map<double>((e) => e as double)
             .toList();
-        double maxPowerConsumption = consumptionValues.isNotEmpty ? consumptionValues.reduce((a, b) => a > b ? a : b) : 0.0;
+        double totalPowerConsumption = consumptionValues.isNotEmpty ? consumptionValues.reduce((a, b) => a + b) : 0.0;
 
         roomData.add({
           'name': key,
@@ -62,14 +63,56 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
           'electricityprice': value['ElectricityPrice'],
           'userid': value['UserID'],
           'tenantName': tenantName,
-          'highestPowerConsumption': maxPowerConsumption, // Adding the highest power consumption to roomData
+          'totalPowerConsumption': totalPowerConsumption,
         });
       });
 
       roomData.sort((a, b) => a['name'].compareTo(b['name']));
       setState(() {});
     }
+
+    // Set up the listener for future changes
+    _roomsRef.onChildChanged.listen((event) {
+      // Update roomData when a child is changed
+      DataSnapshot snapshot = event.snapshot;
+      String key = snapshot.key ?? '';
+      Map<dynamic, dynamic> roomValue = Map<dynamic, dynamic>.from(snapshot.value as Map);
+      Map<dynamic, dynamic> userValues = Map<dynamic, dynamic>.from(userSnapshot.value as Map);
+
+      String tenantName = userValues[roomValue['UserID']]['username'] ?? 'No Name';
+      List<double> consumptionValues = (roomValue['PowerConsumption'] as Map<dynamic, dynamic>)
+          .values
+          .map<double>((e) => e as double)
+          .toList();
+      double totalPowerConsumption = consumptionValues.isNotEmpty ? consumptionValues.reduce((a, b) => a + b) : 0.0;
+
+      setState(() {
+        int existingIndex = roomData.indexWhere((element) => element['name'] == key);
+        if (existingIndex != -1) {
+          // Update existing data
+          roomData[existingIndex]['currentcredit'] = roomValue['CurrentCredit'];
+          roomData[existingIndex]['creditcriticallevel'] = roomValue['CreditCriticalLevel'];
+          roomData[existingIndex]['electricityprice'] = roomValue['ElectricityPrice'];
+          roomData[existingIndex]['userid'] = roomValue['UserID'];
+          roomData[existingIndex]['tenantName'] = tenantName;
+          roomData[existingIndex]['totalPowerConsumption'] = totalPowerConsumption;
+        } else {
+          // Add new data if not present
+          roomData.add({
+            'name': key,
+            'currentcredit': roomValue['CurrentCredit'],
+            'creditcriticallevel': roomValue['CreditCriticalLevel'],
+            'electricityprice': roomValue['ElectricityPrice'],
+            'userid': roomValue['UserID'],
+            'tenantName': tenantName,
+            'totalPowerConsumption': totalPowerConsumption,
+          });
+        }
+        roomData.sort((a, b) => a['name'].compareTo(b['name']));
+      });
+    });
   }
+
 
   Future<void> getPayments() async {
     final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
@@ -209,7 +252,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
+                        margin: EdgeInsets.fromLTRB(0 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
                         child: Builder(
                           builder: (context) => IconButton(
                             icon: Image.asset(
@@ -277,7 +320,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                                     ),
                                   ),
                                   Text(
-                                    'Power: ${room['highestPowerConsumption']} KWh',
+                                    'Power: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,

@@ -179,7 +179,7 @@ class _TenantProfileState extends State<TenantProfile> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Payment Records',
+                  'Recent Payments',
                   style: SafeGoogleFont(
                     'Urbanist',
                     fontSize: 18 * size,

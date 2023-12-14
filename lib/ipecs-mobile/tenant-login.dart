@@ -22,11 +22,13 @@ class _TenantLoginState extends State<TenantLogin> {
   void _signIn() async {
     showDialog(
       context: context,
-      builder: (context){
-        return Center(child: CircularProgressIndicator(
-          color: Color(0xffdfb153),
-        ));
-      }
+      builder: (context) {
+        return Center(
+          child: CircularProgressIndicator(
+            color: Color(0xffdfb153),
+          ),
+        );
+      },
     );
     try {
       final loginUser = await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -47,10 +49,20 @@ class _TenantLoginState extends State<TenantLogin> {
         final snapshotValue = snapshot.snapshot.value;
 
         if (snapshotValue != null) {
-          if ((snapshotValue as Map)['userRole'] == 'Tenant') {
-            // If the user is a Tenant, navigate to TenantRooms
-            Navigator.push(context, MaterialPageRoute(builder: (context) => const TenantDashboard()));
-          } else if ((snapshotValue as Map)['userRole'] == 'Landlord') {
+          final userRole = (snapshotValue as Map)['userRole'];
+          final userStatus = (snapshotValue as Map)['userStatus'];
+
+          if (userRole == 'Tenant') {
+            if (userStatus == true) {
+              // If the user is a Tenant and userStatus is true, navigate to TenantDashboard
+              Navigator.push(context, MaterialPageRoute(builder: (context) => TenantDashboard()));
+            } else {
+              // If userStatus is false, show an error message
+              setState(() {
+                _errorMessage = 'Your account is disabled. Contact the admin for assistance.';
+              });
+            }
+          } else if (userRole == 'Landlord') {
             // If the user is a Landlord, show an error message
             setState(() {
               _errorMessage = 'Landlords are not allowed to log in here.';
@@ -74,6 +86,7 @@ class _TenantLoginState extends State<TenantLogin> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

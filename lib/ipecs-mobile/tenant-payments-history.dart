@@ -188,7 +188,7 @@ class _PaymentHistoryState extends State<PaymentHistory> {
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
+                        margin: EdgeInsets.fromLTRB(0 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
                         child: Builder(
                           builder: (context) => IconButton(
                             icon: Image.asset(

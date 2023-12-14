@@ -48,7 +48,7 @@ dependencies:
   permission_handler: ^11.0.1
   intl: ^0.18.1
   firebase_storage: ^11.2.8
-  fluttertoast: ^8.2.2
+  fluttertoast: ^8.2.4
   flutter_local_notifications: ^16.1.0
   firebase_messaging: ^14.7.5
 
@@ -97,6 +97,7 @@ flutter:
     - assets/ipecs-mobile/images/icon-yZB.png
     - assets/ipecs-mobile/images/rectangle-69.png
     - assets/ipecs-mobile/images/get-started-bg.png
+    - assets/ipecs-mobile/images/intro-bg.png
     - assets/ipecs-mobile/images/user1.png
     - assets/ipecs-mobile/images/user2.png
     - assets/ipecs-mobile/images/user3.png

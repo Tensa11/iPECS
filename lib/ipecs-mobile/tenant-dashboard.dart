@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
+import 'package:iPECS/ipecs-mobile/tenant-login.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
 import 'package:iPECS/utils.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -64,7 +65,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
 
     // Start the timer
-    _timer = Timer.periodic(Duration(minutes: 1), (Timer timer) {
+    _timer = Timer.periodic(Duration(seconds: 5), (Timer timer) {
       // Check if the credit is critical
       for (var room in roomData) {
         bool isCreditCritical = room['creditcriticallevel'] > (room['currentcredit'] ?? 0).toDouble();
@@ -81,6 +82,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
     _timer?.cancel();
     super.dispose();
   }
+
   Future<void> getRooms() async {
     currentUser = auth.currentUser;
     if (currentUser != null) {
@@ -96,13 +98,15 @@ class _TenantDashboardState extends State<TenantDashboard> {
           }).map<Map<String, dynamic>>((entry) {
             final room = entry.value;
             final powerConsumption = room['PowerConsumption'] ?? {};
-            // Get the highest power consumption value in this room
-            final highestPowerConsumption = powerConsumption.values.reduce((value, element) => value > element ? value : element);
+
+            // Calculate the total power consumption
+            double totalPowerConsumption = powerConsumption.values.fold(0.0, (sum, value) => sum + value);
+
             return {
               'name': entry.key,
               'currentcredit': room['CurrentCredit'] ?? 0,
               'creditcriticallevel': room['CreditCriticalLevel'] ?? 0,
-              'highestPowerConsumption': highestPowerConsumption ?? 0,
+              'totalPowerConsumption': totalPowerConsumption, // Assign total power consumption
             };
           }).toList();
 
@@ -250,6 +254,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
     );
     showImageDialog(imageName);
   }
+
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
@@ -305,7 +310,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                         ),
                       ),
                       Container(
-                        margin: EdgeInsets.fromLTRB(10 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
+                        margin: EdgeInsets.fromLTRB(0 * sizeAxis, 20 * sizeAxis, 0 * sizeAxis, 0 * sizeAxis),
                         child: Builder(
                           builder: (context) => IconButton(
                             icon: Image.asset(
@@ -392,8 +397,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                                   ),
                                   SizedBox(height: 5),
                                   Text(
-                                    'Power: ${room['highestPowerConsumption']} KWh',
-                                    style: TextStyle(
+                                    'Power: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',                                    style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,

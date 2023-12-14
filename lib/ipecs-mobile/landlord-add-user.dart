@@ -253,19 +253,17 @@ class _AddUserState extends State<AddUser> {
                       color: const Color(0xfff7f7f8),
                     ),
                     child: DropdownButtonFormField<String>(
-                      value: selectedRoomNumber,
-                      items: [
-                        DropdownMenuItem<String>(
-                          value: 'None',
-                          child: Text('None'),
-                        ),
-                        ...roomNumbers.map((String room) {
-                          return DropdownMenuItem<String>(
-                            value: room,
-                            child: Text(room),
-                          );
-                        }).toList(),
-                      ],
+                      value: selectedRoomNumber.isNotEmpty && roomNumbers.contains(selectedRoomNumber)
+                          ? selectedRoomNumber
+                          : roomNumbers.isNotEmpty
+                          ? roomNumbers[0]
+                          : '',
+                      items: roomNumbers.map((String room) {
+                        return DropdownMenuItem<String>(
+                          value: room,
+                          child: Text(room),
+                        );
+                      }).toList(),
                       onChanged: (String? newValue) {
                         setState(() {
                           selectedRoomNumber = newValue!;
