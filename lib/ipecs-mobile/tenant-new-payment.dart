@@ -220,7 +220,30 @@ class _NewPaymentState extends State<NewPayment> {
   void initState() {
     super.initState();
     fetchAvailableRooms();
+    fetchUsername(); // Call the method to fetch the username
   }
+
+  // Method to fetch the current user's username
+  void fetchUsername() {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final DatabaseReference userReference = FirebaseDatabase.instance.reference().child("Users").child(uid);
+
+    userReference.onValue.listen((event) {
+      if (event.snapshot.value != null) {
+        final userData = event.snapshot.value as Map<dynamic, dynamic>;
+        final username = userData['username'] as String;
+
+        // Set the fetched username to the controller
+        setState(() {
+          paidByController.text = username;
+        });
+      }
+    }, onError: (error) {
+      print("Error fetching username: $error");
+    });
+  }
+
+
 
   // Fetch available room numbers from Firebase
   void fetchAvailableRooms() {

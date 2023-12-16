@@ -19,12 +19,18 @@ class _ManageUserState extends State<ManageUser> {
   late DatabaseReference _usersRef;
   List<Map<String, dynamic>> userData = [];
 
+  late DatabaseReference _roomsRef;
+  List<String> roomNumbers = [];
+  String selectedRoomNumber = "";
+
   @override
   void initState() {
     super.initState();
     _usersRef = FirebaseDatabase.instance.reference().child("Users");
     getUsers();
     _listenForUserChanges(); // Add this line to start listening for changes
+    _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");
+    fetchAvailableRooms();
   }
 
   Future<void> getUsers() async {
@@ -87,6 +93,44 @@ class _ManageUserState extends State<ManageUser> {
     });
   }
 
+  void fetchAvailableRooms() {
+    final DatabaseReference _roomsReference =
+    FirebaseDatabase.instance.reference().child("Rooms");
+
+    _roomsReference.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data is Map) {
+        final availableRooms =
+        data.keys.toList().cast<String>(); // Convert to List<String>
+
+        // Sort room numbers before updating state
+        availableRooms.sort((a, b) => a.compareTo(b));
+
+        setState(() {
+          // Add "None" as an option at the beginning of the roomNumbers list
+          roomNumbers = ['None', ...availableRooms];
+
+          if (!roomNumbers.contains(selectedRoomNumber) &&
+              availableRooms.isNotEmpty) {
+            // Update the selected room number only if it is not in the updated room list
+            selectedRoomNumber = availableRooms[0];
+          }
+        });
+      }
+    }, onError: (error) {
+      print("Error fetching available room numbers: $error");
+    });
+  }
+
+  Future<void> _updateRoomUserID(String roomId, String userId) async {
+    try {
+      await _roomsRef.child(roomId).update({'UserID': userId});
+      print('UserID updated successfully for Room: $roomId');
+    } catch (error) {
+      print('Error updating UserID for Room: $roomId - $error');
+    }
+  }
+
   Future<void> _editUserData(String userId) async {
     double baseWidth = 375;
     double sizeAxis = MediaQuery.of(context).size.width / baseWidth;
@@ -143,6 +187,33 @@ class _ManageUserState extends State<ManageUser> {
                     color: const Color(0xff5c5473),
                   ),
                 ),
+                SizedBox(height: 20 * sizeAxis),
+                DropdownButtonFormField<String>(
+                  value: selectedRoomNumber.isNotEmpty &&
+                      roomNumbers.contains(selectedRoomNumber)
+                      ? selectedRoomNumber
+                      : roomNumbers.isNotEmpty
+                      ? roomNumbers[0]
+                      : '',
+                  items: roomNumbers.map((String room) {
+                    return DropdownMenuItem<String>(
+                      value: room,
+                      child: Text(room),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedRoomNumber = newValue!;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.fromLTRB(
+                        18 * sizeAxis, 17 * sizeAxis, 16 * sizeAxis, 17 * sizeAxis),
+                    hintText: 'Room Number',
+                    hintStyle: const TextStyle(color: Color(0xff8390a1)),
+                  ),
+                ),
               ],
             ),
           ),
@@ -166,6 +237,12 @@ class _ManageUserState extends State<ManageUser> {
                     'username': usernameController.text,
                     'contactNum': contactNumController.text,
                   });
+
+                  // Check if a room is selected
+                  if (selectedRoomNumber != 'None') {
+                    await _updateRoomUserID(selectedRoomNumber, userId);
+                  }
+
                   // Refresh the user data after updating the fields
                   await getUsers();
                 } catch (error) {
@@ -186,6 +263,7 @@ class _ManageUserState extends State<ManageUser> {
     contactNumController.dispose();
     // Dispose other controllers as needed
   }
+
 
 
 
