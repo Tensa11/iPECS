@@ -27,6 +27,13 @@ class _LandlordRecordsState extends State<LandlordRecords> {
     getPayments();
   }
 
+  @override
+  void dispose() {
+    // Dispose the listener when the widget is disposed
+    _databaseReference.onValue.listen((event) {}).cancel();
+    super.dispose();
+  }
+
   Future<void> getPayments() async {
     currentUser = auth.currentUser;
     if (currentUser != null) {
@@ -34,26 +41,27 @@ class _LandlordRecordsState extends State<LandlordRecords> {
       _databaseReference.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
-          paymentData = data.entries.map<Map<String, dynamic>>((entry) {
-            final payment = entry.value;
-            return {
-              'ref': entry.key,
-              'date': payment['Date'],
-              'paidBy': payment['PaidBy'],
-              'paymentAmount': payment['PaymentAmount'],
-              'paymentStatus': payment['PaymentStatus'],
-              'proofImage': payment['ProofImage'],
-              'roomNum': payment['RoomNum'],
-            };
-          }).toList();
-          // Sort paymentData by date in descending order
-          paymentData.sort((a, b) {
-            var format = DateFormat("MM-dd-yyyy");
-            var dateA = format.parse(a['date']);
-            var dateB = format.parse(b['date']);
-            return dateB.compareTo(dateA);
+          setState(() {
+            paymentData = data.entries.map<Map<String, dynamic>>((entry) {
+              final payment = entry.value;
+              return {
+                'ref': entry.key,
+                'date': payment['Date'],
+                'paidBy': payment['PaidBy'],
+                'paymentAmount': payment['PaymentAmount'],
+                'paymentStatus': payment['PaymentStatus'],
+                'proofImage': payment['ProofImage'],
+                'roomNum': payment['RoomNum'],
+              };
+            }).toList();
+            // Sort paymentData by date in descending order
+            paymentData.sort((a, b) {
+              var format = DateFormat("MM-dd-yyyy");
+              var dateA = format.parse(a['date']);
+              var dateB = format.parse(b['date']);
+              return dateB.compareTo(dateA);
+            });
           });
-          setState(() {});
         } else {
           print("Data is not in the expected format");
         }

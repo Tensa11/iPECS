@@ -30,20 +30,30 @@ class _PaymentHistoryState extends State<PaymentHistory> {
     super.initState();
     getPayments();
   }
+  @override
+  void dispose() {
+    // Dispose the listeners when the widget is disposed
+    _paymentRecordReference.onValue.listen((event) {}).cancel();
+    super.dispose();
+  }
 
   Future<void> getPayments() async {
     currentUser = auth.currentUser;
     if (currentUser != null) {
       print("USER ID: ${currentUser?.uid}");
-      final roomNumbers = await getRoomsForCurrentUser(); // Get all RoomNums associated with the current user
+      final roomNumbers = await getRoomsForCurrentUser();
 
       // Clear the paymentData list
       paymentData.clear();
 
-      for (final roomNum in roomNumbers) {
-        _paymentRecordReference.onValue.listen((event) {
-          final data = event.snapshot.value;
-          if (data is Map) {
+      // Set up a single listener for payment records
+      _paymentRecordReference.onValue.listen((event) {
+        final data = event.snapshot.value;
+        if (data is Map) {
+          // Clear the list before adding new data
+          paymentData.clear();
+
+          for (final roomNum in roomNumbers) {
             // Filter payment data by matching RoomNum with the current user's rooms
             final paymentsForRoom = data.entries
                 .where((entry) => entry.value['RoomNum'] == roomNum)
@@ -62,20 +72,22 @@ class _PaymentHistoryState extends State<PaymentHistory> {
 
             // Add payments for this room to the paymentData list
             paymentData.addAll(paymentsForRoom);
-
-            // Sort the paymentData by date in descending order
-            paymentData.sort((a, b) {
-              var format = DateFormat("MM-dd-yyyy");
-              var dateA = format.parse(a['date']);
-              var dateB = format.parse(b['date']);
-              return dateB.compareTo(dateA);
-            });
-            setState(() {});
-          } else {
-            print("Data is not in the expected format");
           }
-        });
-      }
+
+          // Sort the paymentData by date in descending order
+          paymentData.sort((a, b) {
+            var format = DateFormat("MM-dd-yyyy");
+            var dateA = format.parse(a['date']);
+            var dateB = format.parse(b['date']);
+            return dateB.compareTo(dateA);
+          });
+
+          // Update UI with new data
+          setState(() {});
+        } else {
+          print("Data is not in the expected format");
+        }
+      });
     } else {
       print("No User");
     }

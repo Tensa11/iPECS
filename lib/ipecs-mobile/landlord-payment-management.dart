@@ -34,7 +34,7 @@ await flutterLocalNotificationsPlugin.show(
     'A Tenant is requesting for a Payment Confirmation!',
     platformChannelSpecifics,
     payload: 'item x'
-  );
+);
 }
 
 class PaymentManage extends StatefulWidget {
@@ -137,9 +137,6 @@ class _PaymentManageState extends State<PaymentManage> {
     }
   }
 
-
-  // Inside the class _PaymentManageState
-
   Future<void> getRooms() async {
     final DatabaseReference _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");
     final DatabaseReference _usersRef = FirebaseDatabase.instance.reference().child("Users");
@@ -217,9 +214,21 @@ class _PaymentManageState extends State<PaymentManage> {
       },
     );
 
+
     String refNumber = payment['ref'];
     String roomNum = payment['roomNum'];
-    int paymentAmount = payment['paymentAmount'] as int; // Parse paymentAmount to int
+
+    // Extract paymentAmount and handle it as either int or double
+    dynamic paymentAmount = payment['paymentAmount'];
+
+    // Check the type of paymentAmount and parse it accordingly
+    if (paymentAmount is int) {
+      paymentAmount = paymentAmount.toDouble(); // Convert int to double if it's an int
+    } else if (paymentAmount is! double) {
+      // If the type is neither int nor double, handle the error or default to 0
+      print('Invalid payment amount type: $paymentAmount');
+      return; // You can handle this scenario as per your application's logic
+    }
 
     DatabaseReference roomRef = FirebaseDatabase.instance.reference().child("Rooms").child(roomNum);
 
@@ -227,7 +236,16 @@ class _PaymentManageState extends State<PaymentManage> {
       DataSnapshot snapshot = event.snapshot;
       if (snapshot.value != null) {
         Map<dynamic, dynamic> roomData = snapshot.value as Map<dynamic, dynamic>;
-        double currentCredit = roomData['CurrentCredit'] ?? 0;
+        dynamic currentCredit = roomData['CurrentCredit'] ?? 0;
+
+        // Convert the currentCredit to double if it's an int
+        if (currentCredit is int) {
+          currentCredit = currentCredit.toDouble();
+        } else if (currentCredit is! double) {
+          print('Invalid current credit type: $currentCredit');
+          return; // Handle the scenario where the current credit is neither int nor double
+        }
+
         double newCredit = currentCredit + paymentAmount;
 
         roomRef.update({'CurrentCredit': newCredit}).then((_) {
