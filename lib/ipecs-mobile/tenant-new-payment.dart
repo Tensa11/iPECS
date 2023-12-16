@@ -363,12 +363,14 @@ class _NewPaymentState extends State<NewPayment> {
                   ),
                 ),
                 Container(
-                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 149 * sizeAxis, 15 * sizeAxis),
+                  margin: EdgeInsets.fromLTRB(0 * sizeAxis, 0 * sizeAxis, 120 * sizeAxis, 15 * sizeAxis),
                   constraints: BoxConstraints(
-                    maxWidth: 181 * sizeAxis,
+                    maxWidth: 330 * sizeAxis,
                   ),
                   child: Text(
-                    'Fill up the needed details and attach the proof of payment',
+                    'Landlord Gcash: 09361771503 \n'
+                        'Fill up the needed details and\n'
+                        'attach the proof of payment',
                     style: GoogleFonts.inter(
                       fontSize: 13 * size,
                       fontWeight: FontWeight.w400,

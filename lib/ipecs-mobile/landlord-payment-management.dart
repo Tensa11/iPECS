@@ -281,7 +281,6 @@ class _PaymentManageState extends State<PaymentManage> {
     });
   }
 
-
   void handleCloseButtonPress(Map<String, dynamic> payment) {
     double sizeAxis = 1.0;
     double size = 1.0;
