@@ -252,16 +252,23 @@ class _NewPaymentState extends State<NewPayment> {
     _roomsReference.onValue.listen((event) {
       final data = event.snapshot.value;
       if (data is Map) {
-        final availableRooms = data.keys.toList().cast<String>(); // Convert to List<String>
+        final List<String> ownedRoomNumbers = [];
+
+        data.forEach((key, value) {
+          // Check if the room's UserID matches the current user's ID
+          if (value['UserID'] == user.uid) {
+            ownedRoomNumbers.add(key);
+          }
+        });
 
         // Sort room numbers before updating state
-        availableRooms.sort((a, b) => a.compareTo(b));
+        ownedRoomNumbers.sort((a, b) => a.compareTo(b));
 
         setState(() {
-          roomNumbers = availableRooms;
-          if (!roomNumbers.contains(selectedRoomNumber) && availableRooms.isNotEmpty) {
+          roomNumbers = ownedRoomNumbers;
+          if (!roomNumbers.contains(selectedRoomNumber) && ownedRoomNumbers.isNotEmpty) {
             // Update the selected room number only if it is not in the updated room list
-            selectedRoomNumber = availableRooms[0];
+            selectedRoomNumber = ownedRoomNumbers[0];
           }
         });
       }
