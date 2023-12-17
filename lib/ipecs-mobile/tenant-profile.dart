@@ -38,37 +38,60 @@ class _TenantProfileState extends State<TenantProfile> {
     getPayments();
   }
 
+  // Function to get the username of the current user based on uid
+  Future<String?> getUsername() async {
+    final userId = currentUser?.uid;
+    if (userId != null) {
+      final userSnapshot = await FirebaseDatabase.instance
+          .reference()
+          .child("Users")
+          .child(userId)
+          .once();
+      final userData = userSnapshot.snapshot.value as Map<dynamic, dynamic>?;
+      if (userData != null && userData.containsKey('username')) {
+        return userData['username'];
+      }
+    }
+    return null;
+  }
+
   Future<void> getPayments() async {
     currentUser = auth.currentUser;
     if (currentUser != null) {
-      print("USER ID: ${currentUser?.uid}");
-      final roomNumbers = await getRoomsForCurrentUser(); // Get all RoomNums associated with the current user
+      final username = await getUsername();
+      if (username != null) {
+        final roomNumbers = await getRoomsForCurrentUser();
 
-      // Clear the paymentData list
-      paymentData.clear();
+        // Clear the paymentData list
+        paymentData.clear();
 
-      for (final roomNum in roomNumbers) {
+        // Set up a single listener for payment records
         _paymentRecordReference.onValue.listen((event) {
           final data = event.snapshot.value;
           if (data is Map) {
-            // Filter payment data by matching RoomNum with the current user's rooms
-            final paymentsForRoom = data.entries
-                .where((entry) => entry.value['RoomNum'] == roomNum)
-                .map<Map<String, dynamic>>((entry) {
-              final payment = entry.value;
-              return {
-                'ref': entry.key,
-                'date': payment['Date'],
-                'paidBy': payment['PaidBy'],
-                'paymentAmount': payment['PaymentAmount'],
-                'paymentStatus': payment['PaymentStatus'],
-                'proofImage': payment['ProofImage'],
-                'roomNum': payment['RoomNum'],
-              };
-            }).toList();
+            // Clear the list before adding new data
+            paymentData.clear();
 
-            // Add payments for this room to the paymentData list
-            paymentData.addAll(paymentsForRoom);
+            for (final roomNum in roomNumbers) {
+              // Filter payment data by matching RoomNum with the current user's rooms
+              final paymentsForRoom = data.entries
+                  .where((entry) => entry.value['RoomNum'] == roomNum && entry.value['PaidBy'] == username)
+                  .map<Map<String, dynamic>>((entry) {
+                final payment = entry.value;
+                return {
+                  'ref': entry.key,
+                  'date': payment['Date'],
+                  'paidBy': payment['PaidBy'],
+                  'paymentAmount': payment['PaymentAmount'],
+                  'paymentStatus': payment['PaymentStatus'],
+                  'proofImage': payment['ProofImage'],
+                  'roomNum': payment['RoomNum'],
+                };
+              }).toList();
+
+              // Add payments for this room to the paymentData list
+              paymentData.addAll(paymentsForRoom);
+            }
 
             // Sort the paymentData by date in descending order
             paymentData.sort((a, b) {
@@ -77,15 +100,16 @@ class _TenantProfileState extends State<TenantProfile> {
               var dateB = format.parse(b['date']);
               return dateB.compareTo(dateA);
             });
-
-            // Take the latest 4 payments for all rooms combined
             paymentData = paymentData.take(4).toList();
 
+            // Update UI with new data
             setState(() {});
           } else {
             print("Data is not in the expected format");
           }
         });
+      } else {
+        print("Username not found for the current user");
       }
     } else {
       print("No User");
