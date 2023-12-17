@@ -111,6 +111,10 @@ class _NewPaymentState extends State<NewPayment> {
       return;
     }
 
+    // Convert the Firebase ServerValue.timestamp to a readable format
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('MM-dd-yyyy HH:mm:ss').format(now); // Format the date
+
     // Show confirmation dialog before submitting the payment
     showDialog(
       context: context,
@@ -167,6 +171,7 @@ class _NewPaymentState extends State<NewPayment> {
                     'PaymentAmount': paymentAmount, // Store the payment amount as a number
                     'ProofImage': 'PaymentProof/$referenceNumber.png',
                     'RoomNum': selectedRoomNumber,
+                    'Timestamp': formattedDate, // Save the Timestamp here
                   };
 
                   _database.child('PaymentManage').child(referenceNumber).set(paymentData).then((_) {

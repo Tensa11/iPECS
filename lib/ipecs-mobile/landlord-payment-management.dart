@@ -120,11 +120,19 @@ class _PaymentManageState extends State<PaymentManage> {
               'paymentAmount': payment['PaymentAmount'],
               'proofImage': payment['ProofImage'],
               'roomNum': payment['RoomNum'],
+              'timestamp': payment['Timestamp'], // Include the timestamp
             };
           }).toList();
+
+          // Sort paymentData by Timestamp in descending order
+          newPaymentData.sort((a, b) {
+            var format = DateFormat("MM-dd-yyyy HH:mm:ss");
+            var dateA = format.parse(b['timestamp']);
+            var dateB = format.parse(a['timestamp']);
+            return dateA.compareTo(dateB);
+          });
+
           setState(() {
-            // Set state when new payment data arrives
-            // Here you can call showNotification method
             if (newPaymentData.isNotEmpty) {
               showNotification();
             }
@@ -344,7 +352,6 @@ class _PaymentManageState extends State<PaymentManage> {
     // Use the same reference number from PaymentManage
     String refNumber = payment['ref'];
 
-    final serverTimestamp = ServerValue.timestamp;
     // Convert the Firebase ServerValue.timestamp to a readable format
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('MM-dd-yyyy HH:mm:ss').format(now); // Format the date
