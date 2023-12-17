@@ -108,22 +108,6 @@ class _ManualPaymentState extends State<ManualPayment> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text(
-                'Cancel',
-                style: SafeGoogleFont(
-                  'Urbanist',
-                  fontSize: 15 * size,
-                  fontWeight: FontWeight.w500,
-                  height: 1.2 * size / sizeAxis,
-                  color: const Color(0xff5c5473),
-                  decoration: TextDecoration.none,
-                ),
-              ),
-            ),
-            TextButton(
               onPressed: () async {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -135,18 +119,23 @@ class _ManualPaymentState extends State<ManualPayment> {
 
                 // Fetch the current 'CurrentCredit' value of the selected room from Firebase
                 DatabaseReference roomRef = _database.child('Rooms').child(selectedRoomNumber);
+
                 try {
                   DataSnapshot snapshot = await roomRef.once().then((event) => event.snapshot);
                   if (snapshot.value != null) {
                     Map<dynamic, dynamic> roomData = snapshot.value as Map<dynamic, dynamic>;
-                    double? currentCredit = roomData['CurrentCredit'] as double?;
-                    if (currentCredit != null) {
-                      // Calculate the updated credit after adding the entered amount
-                      double updatedCredit = currentCredit + enteredAmount;
+                    var currentCredit = roomData['CurrentCredit'];
 
-                      // Update the 'CurrentCredit' value for the selected room in Firebase
-                      await roomRef.update({'CurrentCredit': updatedCredit}).then((_) {
-                        // Navigate to LandlordDashboard after successful payment update
+                    if (currentCredit is int || currentCredit is double) {
+                      var numericEnteredAmount = enteredAmount; // Keep enteredAmount as double
+
+                      // Convert currentCredit to double if it's an int
+                      var currentCreditValue = currentCredit is int ? currentCredit.toDouble() : currentCredit;
+
+                      var updatedCredit = currentCreditValue + numericEnteredAmount;
+
+                      // Ensure updatedCredit is stored as a double in Firebase
+                      await roomRef.update({'CurrentCredit': updatedCredit.toDouble()}).then((_) {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => LandlordDashboard(),
@@ -181,13 +170,27 @@ class _ManualPaymentState extends State<ManualPayment> {
                 ),
               ),
             ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Cancel',
+                style: SafeGoogleFont(
+                  'Urbanist',
+                  fontSize: 15 * size,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2 * size / sizeAxis,
+                  color: const Color(0xff5c5473),
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
           ],
         );
       },
     );
   }
-
-
 
   @override
   void initState() {
