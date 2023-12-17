@@ -86,6 +86,7 @@ class _TenantProfileState extends State<TenantProfile> {
                   'paymentStatus': payment['PaymentStatus'],
                   'proofImage': payment['ProofImage'],
                   'roomNum': payment['RoomNum'],
+                  'timestamp': payment['Timestamp'], // Add the 'timestamp' field
                 };
               }).toList();
 
@@ -93,15 +94,14 @@ class _TenantProfileState extends State<TenantProfile> {
               paymentData.addAll(paymentsForRoom);
             }
 
-            // Sort the paymentData by date in descending order
+            // Sort paymentData by timestamp in descending order
             paymentData.sort((a, b) {
-              var format = DateFormat("MM-dd-yyyy");
-              var dateA = format.parse(a['date']);
-              var dateB = format.parse(b['date']);
+              var format = DateFormat("MM-dd-yyyy HH:mm:ss");
+              var dateA = format.parse(a['timestamp']);
+              var dateB = format.parse(b['timestamp']);
               return dateB.compareTo(dateA);
             });
             paymentData = paymentData.take(4).toList();
-
             // Update UI with new data
             setState(() {});
           } else {

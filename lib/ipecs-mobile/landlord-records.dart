@@ -52,13 +52,15 @@ class _LandlordRecordsState extends State<LandlordRecords> {
                 'paymentStatus': payment['PaymentStatus'],
                 'proofImage': payment['ProofImage'],
                 'roomNum': payment['RoomNum'],
+                'timestamp': payment['Timestamp'], // Add the 'timestamp' field
               };
             }).toList();
-            // Sort paymentData by date in descending order
+
+            // Sort paymentData by timestamp in descending order
             paymentData.sort((a, b) {
-              var format = DateFormat("MM-dd-yyyy");
-              var dateA = format.parse(a['date']);
-              var dateB = format.parse(b['date']);
+              var format = DateFormat("MM-dd-yyyy HH:mm:ss");
+              var dateA = format.parse(a['timestamp']);
+              var dateB = format.parse(b['timestamp']);
               return dateB.compareTo(dateA);
             });
           });

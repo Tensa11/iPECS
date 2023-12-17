@@ -11,6 +11,7 @@ import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:intl/intl.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -214,7 +215,6 @@ class _PaymentManageState extends State<PaymentManage> {
       },
     );
 
-
     String refNumber = payment['ref'];
     String roomNum = payment['roomNum'];
 
@@ -229,6 +229,11 @@ class _PaymentManageState extends State<PaymentManage> {
       print('Invalid payment amount type: $paymentAmount');
       return; // You can handle this scenario as per your application's logic
     }
+
+    final serverTimestamp = ServerValue.timestamp;
+    // Convert the Firebase ServerValue.timestamp to a readable format
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('MM-dd-yyyy HH:mm:ss').format(now); // Format the date
 
     DatabaseReference roomRef = FirebaseDatabase.instance.reference().child("Rooms").child(roomNum);
 
@@ -248,7 +253,10 @@ class _PaymentManageState extends State<PaymentManage> {
 
         double newCredit = currentCredit + paymentAmount;
 
-        roomRef.update({'CurrentCredit': newCredit}).then((_) {
+        roomRef.update({
+          'CurrentCredit': newCredit,
+          'Timestamp': formattedDate, // Save the Timestamp here
+        }).then((_) {
           // Copy data from PaymentManage to PaymentRecord and set PaymentStatus to true
           _paymentRecordReference.child(refNumber).set({
             'Date': payment['date'],
@@ -257,6 +265,7 @@ class _PaymentManageState extends State<PaymentManage> {
             'ProofImage': payment['proofImage'],
             'RoomNum': payment['roomNum'],
             'PaymentStatus': true,
+            'Timestamp': formattedDate, // Save the Timestamp here
           }).then((_) {
             // Remove the payment record from PaymentManage
             _paymentManageReference.child(refNumber).remove().then((_) {
@@ -335,6 +344,11 @@ class _PaymentManageState extends State<PaymentManage> {
     // Use the same reference number from PaymentManage
     String refNumber = payment['ref'];
 
+    final serverTimestamp = ServerValue.timestamp;
+    // Convert the Firebase ServerValue.timestamp to a readable format
+    DateTime now = DateTime.now();
+    String formattedDate = DateFormat('MM-dd-yyyy HH:mm:ss').format(now); // Format the date
+
     // Copy data from PaymentManage to PaymentRecord and set PaymentStatus to false
     _paymentRecordReference.child(refNumber).set({
       'Date': payment['date'],
@@ -343,6 +357,7 @@ class _PaymentManageState extends State<PaymentManage> {
       'ProofImage': payment['proofImage'],
       'RoomNum': payment['roomNum'],
       'PaymentStatus': false,
+      'Timestamp': formattedDate, // Save the Timestamp here
     });
 
     // Remove the payment record from PaymentManage

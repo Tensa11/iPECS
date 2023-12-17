@@ -113,36 +113,39 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
     });
   }
 
+  final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
 
   Future<void> getPayments() async {
-    final DatabaseReference _databaseReference = FirebaseDatabase.instance.reference().child("PaymentRecord");
     currentUser = auth.currentUser;
     if (currentUser != null) {
       print("USER ID: ${currentUser?.uid}");
       _databaseReference.onValue.listen((event) {
         final data = event.snapshot.value;
         if (data is Map) {
-          paymentData = data.entries.map<Map<String, dynamic>>((entry) {
-            final payment = entry.value;
-            return {
-              'ref': entry.key,
-              'date': payment['Date'],
-              'paidBy': payment['PaidBy'],
-              'paymentAmount': payment['PaymentAmount'],
-              'paymentStatus': payment['PaymentStatus'],
-              'proofImage': payment['ProofImage'],
-              'roomNum': payment['RoomNum'],
-            };
-          }).toList();
-          // Sort paymentData by date in descending order
-          paymentData.sort((a, b) {
-            var format = DateFormat("MM-dd-yyyy");
-            var dateA = format.parse(a['date']);
-            var dateB = format.parse(b['date']);
-            return dateB.compareTo(dateA);
+          setState(() {
+            paymentData = data.entries.map<Map<String, dynamic>>((entry) {
+              final payment = entry.value;
+              return {
+                'ref': entry.key,
+                'date': payment['Date'],
+                'paidBy': payment['PaidBy'],
+                'paymentAmount': payment['PaymentAmount'],
+                'paymentStatus': payment['PaymentStatus'],
+                'proofImage': payment['ProofImage'],
+                'roomNum': payment['RoomNum'],
+                'timestamp': payment['Timestamp'], // Add the 'timestamp' field
+              };
+            }).toList();
+
+            // Sort paymentData by timestamp in descending order
+            paymentData.sort((a, b) {
+              var format = DateFormat("MM-dd-yyyy HH:mm:ss");
+              var dateA = format.parse(a['timestamp']);
+              var dateB = format.parse(b['timestamp']);
+              return dateB.compareTo(dateA);
+            });
+            paymentData = paymentData.take(4).toList();
           });
-          paymentData = paymentData.take(4).toList();
-          setState(() {});
         } else {
           print("Data is not in the expected format");
         }
