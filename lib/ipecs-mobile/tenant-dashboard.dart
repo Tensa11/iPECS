@@ -421,7 +421,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
                                   ),
                                   SizedBox(height: 5),
                                   Text(
-                                    'Power: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',                                    style: TextStyle(
+                                    '⚡: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',                                    style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,

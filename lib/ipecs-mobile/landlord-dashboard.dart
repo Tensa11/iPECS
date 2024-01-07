@@ -369,6 +369,15 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                                     ),
                                   ),
                                   Text(
+                                    'Electricity Price: ₱${room['electricityprice']}',
+                                    style: TextStyle(
+                                      fontFamily: 'Urbanist',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                  Text(
                                     '⚡: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
