@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
@@ -200,6 +201,49 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
     showImageDialog(imageName);
   }
 
+  void _roomHistory(int selectedIndex) {
+    if (selectedIndex >= 0 && selectedIndex < roomData.length) {
+      // Create a reference to the Firebase node for RoomHistory
+      DatabaseReference _roomHistoryRef = FirebaseDatabase.instance.reference().child("RoomHistory");
+
+      // Get the selected room data
+      Map<String, dynamic> selectedRoom = roomData[selectedIndex];
+
+      // Create a unique key for the selected entry in RoomHistory
+      String newKey = _roomHistoryRef.push().key ?? '';
+
+      // Copy the data from the selected room to RoomHistory using the new key
+      _roomHistoryRef.child(newKey).set({
+        'name': selectedRoom['name'],
+        'tenantName': selectedRoom['tenantName'],
+        'currentcredit': selectedRoom['currentcredit'],
+        'creditcriticallevel': selectedRoom['creditcriticallevel'],
+        'electricityprice': selectedRoom['electricityprice'],
+        'userid': selectedRoom['userid'],
+        'totalPowerConsumption': selectedRoom['totalPowerConsumption'],
+        'timestamp': DateTime.now().toString(), // You can add a timestamp if needed
+      }).then((_) {
+        print("Selected room data copied to RoomHistory successfully");
+        _updateCurrentCreditToZero(selectedRoom['name']); // Pass the room key to update only that room's credit
+      }).catchError((error) {
+        print("Failed to copy selected room data: $error");
+      });
+    } else {
+      print("Invalid index or no room selected");
+    }
+  }
+
+  void _updateCurrentCreditToZero(String roomKey) {
+    DatabaseReference _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");
+
+    _roomsRef.child(roomKey).update({'CurrentCredit': 0}).then((_) {
+      print("CurrentCredit updated to 0 for room: $roomKey");
+    }).catchError((error) {
+      print("Error updating CurrentCredit for room $roomKey: $error");
+    });
+  }
+
+
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
@@ -293,7 +337,9 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                       ListView(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        children: roomData.map((room) {
+                        children: roomData.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          Map<String, dynamic> room = entry.value;
                           return Card(
                             elevation: 3,
                             child: ListTile(
@@ -323,7 +369,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                                     ),
                                   ),
                                   Text(
-                                    'Power: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',
+                                    '⚡: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -333,6 +379,16 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                                     ),
                                   ),
                                 ],
+                              ),
+                              trailing: IconButton(
+                                onPressed: () {
+                                  _roomHistory(index);
+                                },
+                                icon: Icon(
+                                  Icons.remove_circle_outlined, // Replace with your desired icon
+                                  color: Colors.red, // Replace with your desired icon color
+                                  size: 30, // Replace with your desired icon size
+                                ),
                               ),
                             ),
                           );
@@ -444,6 +500,123 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showEditCreditCriticalLevelDialog();
+        },
+        child: Icon(Icons.electric_bolt),
+        backgroundColor: Color(0xffdfb153),
+      ),
     );
   }
+  void _showEditCreditCriticalLevelDialog() {
+    double baseWidth = 375;
+    double sizeAxis = MediaQuery.of(context).size.width / baseWidth;
+    double size = sizeAxis * 0.97;
+
+    TextEditingController elecPriceController = TextEditingController();
+    bool isSaveButtonEnabled = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                'Edit The Desired Electricity Price',
+                style: SafeGoogleFont(
+                  'Urbanist',
+                  fontSize: 18 * size,
+                  fontWeight: FontWeight.w500,
+                  height: 1.2 * size / sizeAxis,
+                  color: const Color(0xff5c5473),
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              content: Container(
+                padding: EdgeInsets.all(16.0 * size),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Ensure the AlertDialog is vertically centered
+                  children: [
+                    TextField(
+                      controller: elecPriceController,
+                      decoration: InputDecoration(labelText: 'New Credit Critical Level'),
+                      style: GoogleFonts.urbanist(
+                        fontSize: 15 * size,
+                        fontWeight: FontWeight.w500,
+                        height: 1.25 * size / sizeAxis,
+                        color: const Color(0xff000000),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        setState(() {
+                          isSaveButtonEnabled = double.tryParse(value) != null;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: SafeGoogleFont(
+                      'Urbanist',
+                      fontSize: 18 * size,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2 * size / sizeAxis,
+                      color: const Color(0xff5c5473),
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: isSaveButtonEnabled
+                      ? () {
+                    _saveElectricityPrice(elecPriceController.text);
+                    Navigator.pop(context);
+                  } : null,
+                  child: Text(
+                    'Save',
+                    style: SafeGoogleFont(
+                      'Urbanist',
+                      fontSize: 18 * size,
+                      fontWeight: FontWeight.w500,
+                      height: 1.2 * size / sizeAxis,
+                      color: const Color(0xff5c5473),
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _saveElectricityPrice(String newElectricityPrice) {
+    DatabaseReference _roomsRef = FirebaseDatabase.instance.reference().child("Rooms");
+
+    _roomsRef.once().then((DatabaseEvent event) {
+      if (event.snapshot.value != null) {
+        Map<dynamic, dynamic>? rooms = event.snapshot.value as Map<dynamic, dynamic>?;
+
+        if (rooms != null) {
+          rooms.forEach((key, room) {
+            _roomsRef.child(key).update({'ElectricityPrice': int.parse(newElectricityPrice)});
+          });
+        }
+      }
+    }).catchError((error) {
+      print("Error: $error");
+    });
+  }
 }
+

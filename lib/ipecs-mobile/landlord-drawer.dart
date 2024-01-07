@@ -7,6 +7,7 @@ import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/ipecs-mobile/landlord-records.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:iPECS/ipecs-mobile/landlord-roomhistory.dart';
 
 class LandlordDrawer extends StatefulWidget {
   const LandlordDrawer({Key? key}) : super(key: key);
@@ -118,6 +119,24 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
                     builder: (context) => const LandlordRecords(),
                   ),
                 );              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.family_restroom,
+                color: Colors.white, // Set the icon color to white
+              ),
+              title: const Text(
+                'Rooms History', // Change to Payment Management
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const LandlordRoomHistory(),
+                  ),
+                );},
             ),
             ListTile(
               leading: const Icon(

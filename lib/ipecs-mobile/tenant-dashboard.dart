@@ -648,6 +648,7 @@ class _TenantDashboardState extends State<TenantDashboard> {
       },
     );
   }
+
   void _saveCreditCriticalLevel(String newCriticalLevel) {
     currentUser = auth.currentUser;
     if (currentUser != null) {
