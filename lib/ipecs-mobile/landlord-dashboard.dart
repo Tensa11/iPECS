@@ -550,7 +550,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                   children: [
                     TextField(
                       controller: elecPriceController,
-                      decoration: InputDecoration(labelText: 'New Credit Critical Level'),
+                      decoration: InputDecoration(labelText: 'New Electricity Price!'),
                       style: GoogleFonts.urbanist(
                         fontSize: 15 * size,
                         fontWeight: FontWeight.w500,
