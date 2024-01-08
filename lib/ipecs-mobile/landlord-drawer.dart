@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-dashboard.dart';
 import 'package:iPECS/ipecs-mobile/landlord-login.dart';
 import 'package:iPECS/ipecs-mobile/landlord-manage-user.dart';
+import 'package:iPECS/ipecs-mobile/landlord-monthly.dart';
 import 'package:iPECS/ipecs-mobile/landlord-payment-management.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/ipecs-mobile/landlord-records.dart';
@@ -117,6 +118,24 @@ class _LandlordDrawerState extends State<LandlordDrawer> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const LandlordRecords(),
+                  ),
+                );              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.calendar_month, // Change to Records icon
+                color: Colors.white, // Set the icon color to white
+              ),
+              title: const Text(
+                'Monthly Consumption', // Change to Records
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const LandlordMonthlyRecords(),
                   ),
                 );              },
             ),

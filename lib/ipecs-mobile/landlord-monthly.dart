@@ -2,55 +2,126 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
 import 'package:iPECS/utils.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
 
-class LandlordRoomHistory extends StatefulWidget {
-  const LandlordRoomHistory({Key? key}) : super(key: key);
+class LandlordMonthlyRecords extends StatefulWidget {
+  const LandlordMonthlyRecords({Key? key}) : super(key: key);
 
   @override
-  _LandlordRoomHistoryState createState() => _LandlordRoomHistoryState();
+  _LandlordMonthlyRecordsState createState() => _LandlordMonthlyRecordsState();
 }
 
-class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
+class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
   final auth = FirebaseAuth.instance;
   User? currentUser;
+  List<Map<String, dynamic>> roomData = [];
 
-  List<Map<String, dynamic>> roomHistoryData = [];
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    getRoomsHistory();
+    getMonthlyReport();
   }
 
-  Future<void> getRoomsHistory() async {
+  @override
+  void dispose() {
+    // Dispose of the timer when the widget is disposed
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> getMonthlyReport() async {
+    DatabaseReference roomsRef = FirebaseDatabase.instance.reference().child('Rooms');
+    DatabaseReference usersRef = FirebaseDatabase.instance.reference().child('Users');
+
     try {
-      DatabaseReference _roomHistoryRef = FirebaseDatabase.instance.reference().child("RoomHistory");
-      DataSnapshot snapshot = await _roomHistoryRef.get();
+      DatabaseEvent roomsEvent = await roomsRef.once();
+      DatabaseEvent usersEvent = await usersRef.once();
 
-      if (snapshot.value != null) {
-        Map<String, dynamic> roomHistoryValues = Map<String, dynamic>.from(snapshot.value as Map);
-        roomHistoryValues.forEach((key, value) {
-          roomHistoryData.add(Map<String, dynamic>.from(value as Map));
+      DataSnapshot roomsSnapshot = roomsEvent.snapshot;
+      DataSnapshot usersSnapshot = usersEvent.snapshot;
+
+      if (roomsSnapshot.value != null) {
+        Map<dynamic, dynamic> rooms = roomsSnapshot.value as Map<dynamic, dynamic>;
+        Map<dynamic, dynamic> users = usersSnapshot.value as Map<dynamic, dynamic>;
+
+        rooms.forEach((key, value) {
+          String roomName = key.toString();
+          String userID = value['UserID'];
+          String tenantName = users[userID]['username'];
+
+          Map<dynamic, dynamic> powerConsumptions = value['PowerConsumption'] ?? {};
+          // Group the power consumption by month
+          Map<String, double> monthlyConsumption = {};
+
+          powerConsumptions.forEach((timestamp, consumption) {
+            DateFormat format = DateFormat('MM-dd-yyyy HH:mm:ss');
+            DateTime? dateTime = format.parse(timestamp.toString(), true).toLocal();
+            if (dateTime == null) {
+              print("Failed to parse timestamp: $timestamp");
+              return;
+            }
+            String monthYear = DateFormat('MM-yyyy').format(dateTime);
+
+            monthlyConsumption.update(monthYear, (currentTotal) => currentTotal + (consumption as double), ifAbsent: () => consumption as double);
+          });
+
+          // Add each month's total consumption to roomData
+          monthlyConsumption.forEach((monthYear, totalConsumption) {
+            DateTime monthYearDateTime = DateFormat('MM-yyyy').parse(monthYear);
+            String formattedMonthYear = DateFormat.yMMMM().format(monthYearDateTime);
+
+            roomData.add({
+              'name': roomName,
+              'Month': formattedMonthYear,
+              'totalMonthConsumption': totalConsumption,
+              'tenantName': tenantName,
+            });
+          });
         });
 
-        // Sort roomHistoryData based on timestamp
-        roomHistoryData.sort((a, b) {
-          var format = DateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
-          var dateA = format.parse(a['timestamp']);
-          var dateB = format.parse(b['timestamp']);
-          return dateB.compareTo(dateA);
+        // Get the current month and year
+        DateTime now = DateTime.now();
+        String currentMonthYear = DateFormat('MM-yyyy').format(now);
+
+        // Sort the roomData list by month and year, and then by room name
+        roomData.sort((a, b) {
+          DateTime dateA = DateFormat('MMMM yyyy').parse(a['Month']);
+          DateTime dateB = DateFormat('MMMM yyyy').parse(b['Month']);
+          int comp = dateA.compareTo(dateB);
+
+          // If both dates are not equal to the current month, sort by date
+          if (comp != 0 && DateFormat('MM-yyyy').format(dateA) != currentMonthYear && DateFormat('MM-yyyy').format(dateB) != currentMonthYear) {
+            return comp;
+          }
+          // If only one date is equal to the current month, that date comes first
+          else if (DateFormat('MM-yyyy').format(dateA) == currentMonthYear && DateFormat('MM-yyyy').format(dateB) != currentMonthYear) {
+            return -1;
+          } else if (DateFormat('MM-yyyy').format(dateA) != currentMonthYear && DateFormat('MM-yyyy').format(dateB) == currentMonthYear) {
+            return 1;
+          }
+          // If both dates are equal to the current month, sort by room name
+          else {
+            return a['name'].compareTo(b['name']);
+          }
         });
 
-        setState(() {});
+        setState(() {
+          // This will trigger the UI to update with the new roomData
+        });
       }
-    } catch (e) {
-      print("Error fetching RoomHistory: $e");
+    } catch (error) {
+      print('Error: $error');
     }
   }
+
 
 
 
@@ -133,7 +204,7 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Rooms History',
+                        'Monthly Consumption',
                         style: SafeGoogleFont(
                           'Urbanist',
                           fontSize: 18 * size,
@@ -143,11 +214,12 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
                           decoration: TextDecoration.none,
                         ),
                       ),
-                      // ListView for Recent Payments
-                      ListView(
+                      ListView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        children: roomHistoryData.map((room) {
+                        itemCount: roomData.length,
+                        itemBuilder: (context, index) {
+                          Map<String, dynamic> room = roomData[index];
                           return Card(
                             elevation: 3,
                             child: ListTile(
@@ -155,7 +227,7 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
                                 backgroundImage: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
                               title: Text(
-                                '${room['name']} - ${room['tenantName']}', // Display the name and tenantName
+                                '${room['name']} - ${room['tenantName']}',
                                 style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 16,
@@ -168,7 +240,7 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
                                 children: <Widget>[
                                   SizedBox(height: 5),
                                   Text(
-                                    'Last Room Credit: ₱${(room['currentcredit'] ?? 0).toStringAsFixed(2)}', // Display the currentcredit
+                                    'Month: ${room['Month']}',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -177,7 +249,7 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
                                     ),
                                   ),
                                   Text(
-                                    'Date: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(room['timestamp']))}', // Extract and format only the date
+                                    'Total Payment: ${room['totalMonthPayment']}',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -186,7 +258,7 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
                                     ),
                                   ),
                                   Text(
-                                      '⚡: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(7)} KWh', // Display the totalPowerConsumption
+                                    'Month ⚡: ${room['totalMonthConsumption'].toStringAsFixed(7)} KWh',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
@@ -199,8 +271,8 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
                               ),
                             ),
                           );
-                        }).toList(),
-                      ),
+                        },
+                      )
                     ],
                   ),
                 ),
@@ -212,3 +284,4 @@ class _LandlordRoomHistoryState extends State<LandlordRoomHistory> {
     );
   }
 }
+

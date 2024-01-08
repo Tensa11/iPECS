@@ -378,7 +378,7 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
                                     ),
                                   ),
                                   Text(
-                                    '⚡: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(8)} KWh',
+                                    '⚡: ${(room['totalPowerConsumption'] ?? 0).toStringAsFixed(7)} KWh',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
