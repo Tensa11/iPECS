@@ -40,18 +40,49 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
   Future<void> getMonthlyReport() async {
     DatabaseReference roomsRef = FirebaseDatabase.instance.reference().child('Rooms');
     DatabaseReference usersRef = FirebaseDatabase.instance.reference().child('Users');
+    DatabaseReference paymentRecordsRef = FirebaseDatabase.instance.reference().child('PaymentRecord');
 
     try {
       DatabaseEvent roomsEvent = await roomsRef.once();
       DatabaseEvent usersEvent = await usersRef.once();
+      DatabaseEvent paymentRecordsEvent = await paymentRecordsRef.once();
 
       DataSnapshot roomsSnapshot = roomsEvent.snapshot;
       DataSnapshot usersSnapshot = usersEvent.snapshot;
+      DataSnapshot paymentRecordsSnapshot = paymentRecordsEvent.snapshot;
+
 
       if (roomsSnapshot.value != null) {
         Map<dynamic, dynamic> rooms = roomsSnapshot.value as Map<dynamic, dynamic>;
         Map<dynamic, dynamic> users = usersSnapshot.value as Map<dynamic, dynamic>;
+        Map<dynamic, dynamic> paymentRecords = paymentRecordsSnapshot.value as Map<dynamic, dynamic>;
 
+        // Prepare a map to hold monthly payments per room
+        Map<String, Map<String, double>> monthlyPaymentsPerRoom = {};
+
+        // Process payment records to calculate monthly payments per room
+        paymentRecords.forEach((id, record) {
+          String roomNum = record['RoomNum'];
+          String timestamp = record['Timestamp'];
+          double paymentAmount = (record['PaymentAmount'] is int)
+              ? (record['PaymentAmount'] as int).toDouble()
+              : record['PaymentAmount'] as double;
+          DateFormat format = DateFormat('MM-dd-yyyy HH:mm:ss');
+          DateTime dateTime = format.parse(timestamp, true).toLocal();
+          String monthYear = DateFormat('MM-yyyy').format(dateTime);
+
+          if (!monthlyPaymentsPerRoom.containsKey(roomNum)) {
+            monthlyPaymentsPerRoom[roomNum] = {};
+          }
+
+          monthlyPaymentsPerRoom[roomNum]!.update(
+            monthYear,
+                (currentTotal) => currentTotal + paymentAmount,
+            ifAbsent: () => paymentAmount,
+          );
+        });
+
+        // Process room data and include monthly payments
         rooms.forEach((key, value) {
           String roomName = key.toString();
           String userID = value['UserID'];
@@ -70,19 +101,26 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
             }
             String monthYear = DateFormat('MM-yyyy').format(dateTime);
 
-            monthlyConsumption.update(monthYear, (currentTotal) => currentTotal + (consumption as double), ifAbsent: () => consumption as double);
+            monthlyConsumption.update(
+              monthYear,
+                  (currentTotal) => currentTotal + (consumption as double),
+              ifAbsent: () => consumption as double,
+            );
           });
 
           // Add each month's total consumption to roomData
           monthlyConsumption.forEach((monthYear, totalConsumption) {
             DateTime monthYearDateTime = DateFormat('MM-yyyy').parse(monthYear);
             String formattedMonthYear = DateFormat.yMMMM().format(monthYearDateTime);
+            double totalPayment = monthlyPaymentsPerRoom[roomName]?[monthYear] ?? 0.0;
 
             roomData.add({
               'name': roomName,
               'Month': formattedMonthYear,
               'totalMonthConsumption': totalConsumption,
               'tenantName': tenantName,
+              'totalMonthPayment': totalPayment,
+
             });
           });
         });
@@ -121,9 +159,6 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
       print('Error: $error');
     }
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +239,7 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Monthly Consumption',
+                        'Monthly Report',
                         style: SafeGoogleFont(
                           'Urbanist',
                           fontSize: 18 * size,
@@ -249,7 +284,7 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
                                     ),
                                   ),
                                   Text(
-                                    'Total Payment: ${room['totalMonthPayment']}',
+                                    'Total Month Payment: ₱${room['totalMonthPayment']}',
                                     style: TextStyle(
                                       fontFamily: 'Urbanist',
                                       fontSize: 14,
