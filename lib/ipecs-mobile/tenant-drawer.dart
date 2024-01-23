@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:iPECS/ipecs-mobile/tenant-dashboard.dart';
 import 'package:iPECS/ipecs-mobile/tenant-login.dart';
+import 'package:iPECS/ipecs-mobile/tenant-monthly.dart';
 import 'package:iPECS/ipecs-mobile/tenant-new-payment.dart';
 import 'package:iPECS/ipecs-mobile/tenant-payments-history.dart';
 import 'package:iPECS/ipecs-mobile/tenant-profile.dart';
@@ -152,6 +153,24 @@ class _TenantDrawerState extends State<TenantDrawer> {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const PaymentHistory(),
+                  ),
+                );              },
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.calendar_month,
+                color: Colors.white, // Set the icon color to white
+              ),
+              title: const Text(
+                'Monthly Records',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const TenantMonthlyRecords(),
                   ),
                 );              },
             ),

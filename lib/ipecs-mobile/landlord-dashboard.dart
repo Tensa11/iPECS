@@ -159,14 +159,14 @@ class _LandlordDashboardState extends State<LandlordDashboard> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   void showImageDialog(String imageName) async {
-    showDialog(
-        context: context,
-        builder: (context){
-          return Center(child: CircularProgressIndicator(
-            color: Color(0xffdfb153),
-          ));
-        }
-    );
+    // showDialog(
+    //     context: context,
+    //     builder: (context){
+    //       return Center(child: CircularProgressIndicator(
+    //         color: Color(0xffdfb153),
+    //       ));
+    //     }
+    // );
     final String imagePath = 'PaymentProof/$imageName.png'; // Update with your folder path
     try {
       final ref = _storage.ref().child(imagePath);

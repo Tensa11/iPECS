@@ -66,7 +66,7 @@ class _PaymentManageState extends State<PaymentManage> {
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessageHandler);
 
     // Start a timer that triggers the notification every 2 minutes
-    const Duration duration = Duration(minutes: 10);
+    const Duration duration = Duration(minutes: 60);
     _timer = Timer.periodic(duration, (Timer timer) {
       if (mounted) {
         // Check if the widget is still mounted before triggering the notification

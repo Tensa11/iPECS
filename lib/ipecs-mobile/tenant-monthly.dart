@@ -4,17 +4,18 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:iPECS/ipecs-mobile/landlord-drawer.dart';
 import 'package:iPECS/ipecs-mobile/landlord-profile.dart';
+import 'package:iPECS/ipecs-mobile/tenant-drawer.dart';
 import 'package:iPECS/utils.dart';
 import 'package:intl/intl.dart';
 
-class LandlordMonthlyRecords extends StatefulWidget {
-  const LandlordMonthlyRecords({Key? key}) : super(key: key);
+class TenantMonthlyRecords extends StatefulWidget {
+  const TenantMonthlyRecords({Key? key}) : super(key: key);
 
   @override
-  _LandlordMonthlyRecordsState createState() => _LandlordMonthlyRecordsState();
+  _TenantMonthlyRecordsState createState() => _TenantMonthlyRecordsState();
 }
 
-class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
+class _TenantMonthlyRecordsState extends State<TenantMonthlyRecords> {
   final auth = FirebaseAuth.instance;
   User? currentUser;
   List<Map<String, dynamic>> roomData = [];
@@ -40,6 +41,14 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
     DatabaseReference paymentRecordsRef = FirebaseDatabase.instance.reference().child('PaymentRecord');
 
     try {
+      // Get the current user
+      currentUser = auth.currentUser;
+
+      if (currentUser == null) {
+        // Handle the case when the user is not logged in
+        return;
+      }
+
       DatabaseEvent roomsEvent = await roomsRef.once();
       DatabaseEvent usersEvent = await usersRef.once();
       DatabaseEvent paymentRecordsEvent = await paymentRecordsRef.once();
@@ -47,7 +56,6 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
       DataSnapshot roomsSnapshot = roomsEvent.snapshot;
       DataSnapshot usersSnapshot = usersEvent.snapshot;
       DataSnapshot paymentRecordsSnapshot = paymentRecordsEvent.snapshot;
-
 
       if (roomsSnapshot.value != null) {
         Map<dynamic, dynamic> rooms = roomsSnapshot.value as Map<dynamic, dynamic>;
@@ -85,41 +93,43 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
           String userID = value['UserID'];
           String tenantName = users[userID]['username'];
 
-          Map<dynamic, dynamic> powerConsumptions = value['PowerConsumption'] ?? {};
-          // Group the power consumption by month
-          Map<String, double> monthlyConsumption = {};
+          // Check if the room belongs to the current tenant
+          if (userID == currentUser!.uid) {
+            Map<dynamic, dynamic> powerConsumptions = value['PowerConsumption'] ?? {};
+            // Group the power consumption by month
+            Map<String, double> monthlyConsumption = {};
 
-          powerConsumptions.forEach((timestamp, consumption) {
-            DateFormat format = DateFormat('MM-dd-yyyy HH:mm:ss');
-            DateTime? dateTime = format.parse(timestamp.toString(), true).toLocal();
-            if (dateTime == null) {
-              print("Failed to parse timestamp: $timestamp");
-              return;
-            }
-            String monthYear = DateFormat('MM-yyyy').format(dateTime);
+            powerConsumptions.forEach((timestamp, consumption) {
+              DateFormat format = DateFormat('MM-dd-yyyy HH:mm:ss');
+              DateTime? dateTime = format.parse(timestamp.toString(), true).toLocal();
+              if (dateTime == null) {
+                print("Failed to parse timestamp: $timestamp");
+                return;
+              }
+              String monthYear = DateFormat('MM-yyyy').format(dateTime);
 
-            monthlyConsumption.update(
-              monthYear,
-                  (currentTotal) => currentTotal + (consumption as double),
-              ifAbsent: () => consumption as double,
-            );
-          });
-
-          // Add each month's total consumption to roomData
-          monthlyConsumption.forEach((monthYear, totalConsumption) {
-            DateTime monthYearDateTime = DateFormat('MM-yyyy').parse(monthYear);
-            String formattedMonthYear = DateFormat.yMMMM().format(monthYearDateTime);
-            double totalPayment = monthlyPaymentsPerRoom[roomName]?[monthYear] ?? 0.0;
-
-            roomData.add({
-              'name': roomName,
-              'Month': formattedMonthYear,
-              'totalMonthConsumption': totalConsumption,
-              'tenantName': tenantName,
-              'totalMonthPayment': totalPayment,
-
+              monthlyConsumption.update(
+                monthYear,
+                    (currentTotal) => currentTotal + (consumption as double),
+                ifAbsent: () => consumption as double,
+              );
             });
-          });
+
+            // Add each month's total consumption to roomData
+            monthlyConsumption.forEach((monthYear, totalConsumption) {
+              DateTime monthYearDateTime = DateFormat('MM-yyyy').parse(monthYear);
+              String formattedMonthYear = DateFormat.yMMMM().format(monthYearDateTime);
+              double totalPayment = monthlyPaymentsPerRoom[roomName]?[monthYear] ?? 0.0;
+
+              roomData.add({
+                'name': roomName,
+                'Month': formattedMonthYear,
+                'totalMonthConsumption': totalConsumption,
+                'tenantName': tenantName,
+                'totalMonthPayment': totalPayment,
+              });
+            });
+          }
         });
 
         // Get the current month and year
@@ -157,6 +167,7 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     double baseWidth = 375;
@@ -165,7 +176,7 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
 
     return Scaffold(
       endDrawer: const Drawer(
-        child: LandlordDrawer(),
+        child: TenantDrawer(),
       ),
       body: SingleChildScrollView(
         child: SizedBox(
@@ -205,7 +216,7 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
                               borderRadius: BorderRadius.circular(24 * sizeAxis),
                               image: const DecorationImage(
                                 fit: BoxFit.cover,
-                                image: AssetImage('assets/ipecs-mobile/images/user2.png'),
+                                image: AssetImage('assets/ipecs-mobile/images/userCartoon.png'),
                               ),
                             ),
                           ),
@@ -260,7 +271,7 @@ class _LandlordMonthlyRecordsState extends State<LandlordMonthlyRecords> {
                               ),
                               title: Text(
                                 '${room['name']} '
-                                    // '- ${room['tenantName']}'
+                                // '- ${room['tenantName']}'
                                 ,
                                 style: const TextStyle(
                                   fontFamily: 'Inter',
